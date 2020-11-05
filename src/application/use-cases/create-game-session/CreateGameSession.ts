@@ -1,9 +1,6 @@
+import { IGameSessionRepository } from '../../../repositories';
 import { genericErrors } from '../../constants';
 import { IGameSession, IMakeGameSession } from '../../entities';
-
-interface IGameSessionRepository {
-  save: ({ hash, name }: { hash: string; name: string }) => Promise<void>;
-}
 
 interface IDependencies {
   gameSessionRepository: IGameSessionRepository;
@@ -14,7 +11,7 @@ interface IProps {
   name: string;
 }
 
-interface ICreateGameSession {
+export interface ICreateGameSession {
   (props: IProps): Promise<IGameSession>;
 }
 

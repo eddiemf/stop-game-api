@@ -1,5 +1,5 @@
 import { genericErrors } from '../../constants';
-import { makeFakeGameSessionMock } from '../../__mocks__/entities/GameSession.mock';
+import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
 import { buildFindGameSession } from './FindGameSession';
 
@@ -7,7 +7,7 @@ describe('FindGameSession', () => {
   const falsyValues = ['', null, undefined, 0];
   const dependencies = {
     gameSessionRepository: gameSessionRepositoryMock,
-    makeGameSession: makeFakeGameSessionMock,
+    makeGameSession: jest.fn(),
   };
   const findGameSession = buildFindGameSession(dependencies);
 
@@ -17,6 +17,7 @@ describe('FindGameSession', () => {
       hash: 'mocked hash',
       name: 'mocked name',
     });
+    dependencies.makeGameSession.mockReturnValue(fakeGameSession);
   });
 
   it('searches for a game session with the given hash in the game session repository', async () => {
@@ -45,8 +46,6 @@ describe('FindGameSession', () => {
   });
 
   it('returns the created game session entity if there was no errors', async () => {
-    await expect(findGameSession({ hash: 'some hash' })).resolves.toEqual(
-      makeFakeGameSessionMock()
-    );
+    await expect(findGameSession({ hash: 'some hash' })).resolves.toEqual(fakeGameSession);
   });
 });

@@ -1,8 +1,7 @@
-import { buildCreateGameSession } from './CreateGameSession';
-import { GameSessionRepository } from '../../../repositories';
+import { gameSessionRepository } from '../../../repositories';
 import { makeGameSession } from '../../entities';
+import { buildCreateGameSession, ICreateGameSession } from './CreateGameSession';
 
-export const createGameSession = buildCreateGameSession({
-  gameSessionRepository: new GameSessionRepository(),
-  makeGameSession,
-});
+const createGameSession = buildCreateGameSession({ gameSessionRepository, makeGameSession });
+
+export { ICreateGameSession, createGameSession };

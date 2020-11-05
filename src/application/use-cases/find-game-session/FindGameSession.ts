@@ -1,9 +1,6 @@
+import { IGameSessionRepository } from '../../../repositories';
 import { genericErrors } from '../../constants';
 import { IGameSession, IMakeGameSession } from '../../entities/game-session';
-
-interface IGameSessionRepository {
-  findByHash: (hash: string) => Promise<{ hash: string; name: string } | void>;
-}
 
 interface IDependencies {
   gameSessionRepository: IGameSessionRepository;
@@ -14,7 +11,7 @@ interface IProps {
   hash: string;
 }
 
-interface IFindGameSession {
+export interface IFindGameSession {
   (props: IProps): Promise<IGameSession | null>;
 }
 

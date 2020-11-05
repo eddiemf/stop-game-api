@@ -1,24 +1,21 @@
 import { genericErrors } from '../../constants';
-import {
-  getHashMock,
-  getNameMock,
-  makeFakeGameSessionMock,
-} from '../../__mocks__/entities/GameSession.mock';
+import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
 import { buildCreateGameSession } from './CreateGameSession';
 
 describe('CreateGameSession', () => {
   const dependencies = {
     gameSessionRepository: gameSessionRepositoryMock,
-    makeGameSession: makeFakeGameSessionMock,
+    makeGameSession: jest.fn(),
   };
   const createGameSession = buildCreateGameSession(dependencies);
 
   beforeEach(() => {
     jest.clearAllMocks();
     dependencies.gameSessionRepository.save.mockResolvedValue(undefined);
-    getHashMock.mockReturnValue('mocked hash');
-    getNameMock.mockReturnValue('mocked name');
+    dependencies.makeGameSession.mockReturnValue(fakeGameSession);
+    fakeGameSession.getHash.mockReturnValue('mocked hash');
+    fakeGameSession.getName.mockReturnValue('mocked name');
   });
 
   it('creates a game session entity with the given name', async () => {
@@ -42,8 +39,6 @@ describe('CreateGameSession', () => {
   });
 
   it('returns the created game session entity if there was no errors', async () => {
-    await expect(createGameSession({ name: 'Some name' })).resolves.toEqual(
-      makeFakeGameSessionMock()
-    );
+    await expect(createGameSession({ name: 'Some name' })).resolves.toEqual(fakeGameSession);
   });
 });
