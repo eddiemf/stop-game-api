@@ -5,7 +5,12 @@ export const validationErrorKeys = {
   STRING_TOO_LONG: 'VALIDATION_ERROR::STRING_TOO_LONG',
 };
 
+export const inputErrorKeys = {
+  TOPIC_NOT_FOUND: 'INPUT_ERROR::TOPIC_NOT_FOUND',
+};
+
 export const VALIDATION_ERROR = 'VALIDATION_ERROR';
+export const INPUT_ERROR = 'INPUT_ERROR';
 
 export const genericErrors = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
