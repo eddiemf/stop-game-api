@@ -1,25 +1,51 @@
-import { validationErrors } from '../../constants';
+import { validationErrorKeys } from '../../constants';
 import { makeGameSession } from './GameSession';
 
 describe('GameSession', () => {
   describe('creation', () => {
     it('throws a validation error if `hash` is not a string', () => {
       // @ts-ignore
-      expect(() => makeGameSession({ hash: 1, name: 'Name' })).toThrow(validationErrors.MUST_BE_STRING);
+      expect(() => makeGameSession({ hash: 1, name: 'Name' })).toThrow(
+        expect.objectContaining({
+          errorKey: validationErrorKeys.MUST_BE_STRING,
+          message: 'Hash must be of type string',
+          value: 'hash',
+        })
+      );
     });
 
     it('throws a validation error if `name` is not a string', () => {
       // @ts-ignore
-      expect(() => makeGameSession({ name: 1 })).toThrow(validationErrors.MUST_BE_STRING);
+      expect(() => makeGameSession({ name: 1 })).toThrow(
+        expect.objectContaining({
+          errorKey: validationErrorKeys.MUST_BE_STRING,
+          message: 'Name must be of type string',
+          value: 'name',
+        })
+      );
     });
 
     it('throws a validation error if `name` has less than 2 characters', () => {
-      expect(() => makeGameSession({ name: '1' })).toThrow(validationErrors.STRING_TOO_SHORT);
+      // @ts-ignore
+      expect(() => makeGameSession({ name: 'a' })).toThrow(
+        expect.objectContaining({
+          errorKey: validationErrorKeys.STRING_TOO_SHORT,
+          message: 'Name is too short (minimum is 2 characters)',
+          value: 'name',
+          context: { minLength: 2, maxLength: 30 },
+        })
+      );
     });
 
     it('throws a validation error if `name` has more than 30 characters', () => {
+      // @ts-ignore
       expect(() => makeGameSession({ name: 'A long name with more than 30 characters' })).toThrow(
-        validationErrors.STRING_TOO_LONG
+        expect.objectContaining({
+          errorKey: validationErrorKeys.STRING_TOO_LONG,
+          message: 'Name is too long (maximum is 30 characters)',
+          value: 'name',
+          context: { minLength: 2, maxLength: 30 },
+        })
       );
     });
   });

@@ -1,6 +1,5 @@
-import Joi from '@hapi/joi';
 import cuid from 'cuid';
-import { JoiErrorParser } from '../../core';
+import { validate } from '../../core';
 
 interface IGameSessionProps {
   hash?: string;
@@ -16,14 +15,14 @@ export interface IMakeGameSession {
   (props: IGameSessionProps): IGameSession;
 }
 
-const GameSessionSchema = Joi.object({
-  hash: Joi.string(),
-  name: Joi.string().min(2).max(30),
-});
+const validationConstraints = {
+  hash: { type: 'string' },
+  name: { type: 'string', length: { minimum: 2, maximum: 30 } },
+};
 
 export const makeGameSession: IMakeGameSession = ({ hash = cuid.slug(), name }): IGameSession => {
-  const { error } = GameSessionSchema.validate({ hash, name });
-  if (error) throw new Error(JoiErrorParser.getErrorKey(error));
+  const error = validate({ hash, name }, validationConstraints);
+  if (error) throw error;
 
   const getHash = () => hash;
   const getName = () => name;
