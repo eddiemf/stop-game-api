@@ -1,3 +1,4 @@
+import { VALIDATION_ERROR } from '../../../application/constants';
 import { fakeGameSession } from '../../../application/__mocks__/entities/GameSession.mock';
 import { responses } from '../constants';
 import { makeGameSessionController } from './GameSession.controller';
@@ -93,7 +94,23 @@ describe('GameSessionController', () => {
       });
     });
 
-    describe('when game session failed to be created', () => {
+    describe('when game session creation throws a validation error', () => {
+      beforeEach(() => {
+        dependencies.createGameSession.mockRejectedValue({
+          type: VALIDATION_ERROR,
+          errorKey: 'some key',
+        });
+      });
+
+      it('returns status 400 and the validation error', async () => {
+        await expect(controller.createGameSession(requestMock)).resolves.toEqual({
+          status: 400,
+          response: { type: VALIDATION_ERROR, errorKey: 'some key' },
+        });
+      });
+    });
+
+    describe('when game session creation throws', () => {
       beforeEach(() => {
         dependencies.createGameSession.mockRejectedValue('error');
       });

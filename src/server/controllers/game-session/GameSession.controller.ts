@@ -1,4 +1,5 @@
 import { Request, RequestHandler } from '..';
+import { VALIDATION_ERROR } from '../../../application/constants';
 import { IFindGameSession } from '../../../application/use-cases';
 import { ICreateGameSession } from '../../../application/use-cases/create-game-session';
 import { responses } from '../constants';
@@ -56,6 +57,13 @@ export const makeGameSessionController = ({
         response: { hash: gameSession.getHash() },
       };
     } catch (error) {
+      if (error.type === VALIDATION_ERROR) {
+        return {
+          status: 400,
+          response: error,
+        };
+      }
+
       return {
         status: 500,
         response: responses.INTERNAL_SERVER_ERROR,
