@@ -54,7 +54,7 @@ export const makeGameSessionController = ({
       const gameSession = await createGameSession({ name });
       return {
         status: 200,
-        response: { hash: gameSession.getHash() },
+        response: { hash: gameSession.getHash(), name: gameSession.getName() },
       };
     } catch (error) {
       if (error.type === VALIDATION_ERROR) {

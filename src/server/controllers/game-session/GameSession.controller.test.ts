@@ -84,12 +84,13 @@ describe('GameSessionController', () => {
       beforeEach(() => {
         dependencies.createGameSession.mockResolvedValue(fakeGameSession);
         fakeGameSession.getHash.mockReturnValue('some hash');
+        fakeGameSession.getName.mockReturnValue('some name');
       });
 
-      it('returns status 200 and the created game session hash response', async () => {
+      it('returns status 200 and the created game session data response', async () => {
         await expect(controller.createGameSession(requestMock)).resolves.toEqual({
           status: 200,
-          response: { hash: 'some hash' },
+          response: { hash: 'some hash', name: 'some name' },
         });
       });
     });
