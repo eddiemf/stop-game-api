@@ -1,7 +1,6 @@
 import { Request, RequestHandler } from '..';
 import { VALIDATION_ERROR } from '../../../application/constants';
-import { IFindGameSession } from '../../../application/use-cases';
-import { ICreateGameSession } from '../../../application/use-cases/create-game-session';
+import { ICreateGameSession, IFindGameSession } from '../../../application/use-cases';
 import { responses } from '../constants';
 
 interface IDependencies {

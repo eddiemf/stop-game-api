@@ -1,6 +1,6 @@
 import express from 'express';
 import { requestAdapter } from './adapters/express-request';
-import { gameSessionController } from './controllers/game-session';
+import { gameSessionController } from './controllers';
 
 const app = express();
 const port = 3000;
