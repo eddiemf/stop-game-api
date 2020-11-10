@@ -1,4 +1,4 @@
-import { genericErrors } from '../../constants';
+import { genericErrors, VALIDATION_ERROR } from '../../constants';
 import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
 import { buildCreateGameSession } from './CreateGameSession';
@@ -29,6 +29,14 @@ describe('CreateGameSession', () => {
       hash: 'mocked hash',
       name: 'mocked name',
     });
+  });
+
+  it('throws the received error if game session creation throws a validation error', async () => {
+    const validationError = { type: VALIDATION_ERROR, key: 'some key' };
+    dependencies.makeGameSession.mockImplementation(() => {
+      throw validationError;
+    });
+    await expect(createGameSession({ name: 'Some name' })).rejects.toEqual(validationError);
   });
 
   it('throws an internal error if game session repository throws while saving', async () => {

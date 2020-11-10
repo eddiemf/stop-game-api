@@ -1,5 +1,5 @@
 import validateJs from 'validate.js';
-import { validationErrorKeys } from '../../constants';
+import { validationErrorKeys, VALIDATION_ERROR } from '../../constants';
 
 interface IValidateJsError {
   validator: string;
@@ -8,6 +8,7 @@ interface IValidateJsError {
 }
 
 interface IValidationError {
+  type: string;
   errorKey: string;
   message: string;
   value?: string;
@@ -67,6 +68,7 @@ export const validate = (
   const error = errors[0];
 
   const validationError = {
+    type: VALIDATION_ERROR,
     errorKey: getErrorKeyFromError(error),
     message: error.error,
     value: error.attribute,

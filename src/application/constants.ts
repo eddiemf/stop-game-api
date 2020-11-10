@@ -5,6 +5,8 @@ export const validationErrorKeys = {
   STRING_TOO_LONG: 'VALIDATION_ERROR::STRING_TOO_LONG',
 };
 
+export const VALIDATION_ERROR = 'VALIDATION_ERROR';
+
 export const genericErrors = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 };

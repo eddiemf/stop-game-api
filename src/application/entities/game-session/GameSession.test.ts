@@ -1,4 +1,4 @@
-import { validationErrorKeys } from '../../constants';
+import { validationErrorKeys, VALIDATION_ERROR } from '../../constants';
 import { makeGameSession } from './GameSession';
 
 describe('GameSession', () => {
@@ -7,6 +7,7 @@ describe('GameSession', () => {
       // @ts-ignore
       expect(() => makeGameSession({ hash: 1, name: 'Name' })).toThrow(
         expect.objectContaining({
+          type: VALIDATION_ERROR,
           errorKey: validationErrorKeys.MUST_BE_STRING,
           message: 'Hash must be of type string',
           value: 'hash',
@@ -18,6 +19,7 @@ describe('GameSession', () => {
       // @ts-ignore
       expect(() => makeGameSession({ name: 1 })).toThrow(
         expect.objectContaining({
+          type: VALIDATION_ERROR,
           errorKey: validationErrorKeys.MUST_BE_STRING,
           message: 'Name must be of type string',
           value: 'name',
@@ -29,6 +31,7 @@ describe('GameSession', () => {
       // @ts-ignore
       expect(() => makeGameSession({ name: 'a' })).toThrow(
         expect.objectContaining({
+          type: VALIDATION_ERROR,
           errorKey: validationErrorKeys.STRING_TOO_SHORT,
           message: 'Name is too short (minimum is 2 characters)',
           value: 'name',
@@ -41,6 +44,7 @@ describe('GameSession', () => {
       // @ts-ignore
       expect(() => makeGameSession({ name: 'A long name with more than 30 characters' })).toThrow(
         expect.objectContaining({
+          type: VALIDATION_ERROR,
           errorKey: validationErrorKeys.STRING_TOO_LONG,
           message: 'Name is too long (maximum is 30 characters)',
           value: 'name',

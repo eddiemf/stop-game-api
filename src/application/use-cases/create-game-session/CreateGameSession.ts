@@ -1,5 +1,5 @@
 import { IGameSessionRepository } from '../../../repositories';
-import { genericErrors } from '../../constants';
+import { genericErrors, VALIDATION_ERROR } from '../../constants';
 import { IGameSession, IMakeGameSession } from '../../entities';
 
 interface IDependencies {
@@ -30,6 +30,8 @@ export const buildCreateGameSession = ({
 
       return gameSession;
     } catch (error) {
+      if (error.type === VALIDATION_ERROR) throw error;
+
       throw genericErrors.INTERNAL_ERROR;
     }
   };
