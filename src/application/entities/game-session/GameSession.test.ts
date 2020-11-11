@@ -76,6 +76,36 @@ describe('GameSession', () => {
     });
   });
 
+  describe('rename', () => {
+    it('renames the game session', () => {
+      const gameSession = makeGameSession({ name: 'Some name' });
+      gameSession.rename('another name');
+      expect(gameSession.getName()).toEqual('another name');
+    });
+
+    it('throws a validation error if the given name is shorter than 2 characters', () => {
+      const gameSession = makeGameSession({ name: 'Some name' });
+      expect(() => gameSession.rename('a')).toThrow(
+        expect.objectContaining({
+          type: VALIDATION_ERROR,
+          errorKey: validationErrorKeys.STRING_TOO_SHORT,
+          message: 'Name is too short (minimum is 2 characters)',
+        })
+      );
+    });
+
+    it('throws a validation error if the given name is bigger than 30 characters', () => {
+      const gameSession = makeGameSession({ name: 'Some name' });
+      expect(() => gameSession.rename('another really gigantic big name')).toThrow(
+        expect.objectContaining({
+          type: VALIDATION_ERROR,
+          errorKey: validationErrorKeys.STRING_TOO_LONG,
+          message: 'Name is too long (maximum is 30 characters)',
+        })
+      );
+    });
+  });
+
   describe('getTopics', () => {
     it('returns the given topics', () => {
       const topics = [

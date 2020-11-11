@@ -17,6 +17,7 @@ interface IGameSessionProps {
 export interface IGameSession {
   getHash: () => string;
   getName: () => string;
+  rename: (newName: string) => void;
   getTopics: () => ITopic[];
   addTopic: (topic: ITopic) => void;
   removeTopic: (topicId: string) => void;
@@ -44,6 +45,14 @@ export const makeGameSession: IMakeGameSession = ({
 
   const getHash = () => hash;
   const getName = () => name;
+
+  const rename = (newName: string) => {
+    const error = validate({ name: newName }, validationConstraints);
+    if (error) throw error;
+
+    name = newName;
+  };
+
   const getTopics = () => topics;
   const addTopic = (topic: ITopic) => {
     const error = validate({ topicName: topic.name }, validationConstraints);
@@ -75,6 +84,7 @@ export const makeGameSession: IMakeGameSession = ({
   return {
     getHash,
     getName,
+    rename,
     getTopics,
     addTopic,
     removeTopic,
