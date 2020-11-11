@@ -2,6 +2,6 @@ import { gameSessionRepository } from '../../../repositories';
 import { makeGameSession } from '../../entities';
 import { buildRenameTopic, IRenameTopic } from './RenameTopic';
 
-const addTopic = buildRenameTopic({ gameSessionRepository, makeGameSession });
+const renameTopic = buildRenameTopic({ gameSessionRepository, makeGameSession });
 
-export { addTopic, IRenameTopic };
+export { renameTopic, IRenameTopic };
