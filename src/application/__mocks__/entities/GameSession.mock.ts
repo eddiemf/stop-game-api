@@ -6,4 +6,6 @@ export const fakeGameSession = {
   addTopic: jest.fn(),
   removeTopic: jest.fn(),
   renameTopic: jest.fn(),
+  getPlayers: jest.fn(),
+  addPlayer: jest.fn(),
 };

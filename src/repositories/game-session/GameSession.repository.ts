@@ -3,10 +3,16 @@ interface ITopicData {
   name: string;
 }
 
+interface IPlayerData {
+  id: string;
+  name: string;
+}
+
 interface IGameSessionData {
   hash: string;
   name: string;
   topics: ITopicData[];
+  players: IPlayerData[];
 }
 
 export interface IGameSessionRepository {

@@ -281,6 +281,14 @@ describe('GameSession', () => {
         })
       );
     });
+
+    it('throws an input error if the given player id is already in the game session', () => {
+      const player = { id: '1', name: 'some name' };
+      const gameSession = makeGameSession({ name: 'Some name', players: [player] });
+      expect(() => gameSession.addPlayer(player)).toThrow(
+        expect.objectContaining(inputErrors.PLAYER_ALREADY_IN_GAME_SESSION)
+      );
+    });
   });
 
   describe('removePlayer', () => {

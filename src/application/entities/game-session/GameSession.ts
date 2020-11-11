@@ -98,6 +98,9 @@ export const makeGameSession: IMakeGameSession = ({
     const error = validate({ playerName: player.name }, validationConstraints);
     if (error) throw error;
 
+    if (players.find(({ id }) => player.id === id))
+      throw inputErrors.PLAYER_ALREADY_IN_GAME_SESSION;
+
     players = appendToList(players, player);
   };
 

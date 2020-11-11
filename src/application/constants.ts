@@ -9,6 +9,7 @@ export const inputErrorKeys = {
   TOPIC_NOT_FOUND: 'INPUT_ERROR::TOPIC_NOT_FOUND',
   GAME_SESSION_NOT_FOUND: 'INPUT_ERROR::GAME_SESSION_NOT_FOUND',
   PLAYER_NOT_FOUND: 'INPUT_ERROR::PLAYER_NOT_FOUND',
+  PLAYER_ALREADY_IN_GAME_SESSION: 'INPUT_ERROR::PLAYER_ALREADY_IN_GAME_SESSION',
 };
 
 export const VALIDATION_ERROR = 'VALIDATION_ERROR';
@@ -33,5 +34,10 @@ export const inputErrors = {
     type: INPUT_ERROR,
     errorKey: inputErrorKeys.PLAYER_NOT_FOUND,
     message: 'The given playerId was not found in the game session',
+  },
+  PLAYER_ALREADY_IN_GAME_SESSION: {
+    type: INPUT_ERROR,
+    errorKey: inputErrorKeys.PLAYER_ALREADY_IN_GAME_SESSION,
+    message: 'The given playerId is already in the game session',
   },
 };
