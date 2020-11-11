@@ -32,6 +32,7 @@ export const buildRemoveTopic = ({
         hash: gameSession.getHash(),
         name: gameSession.getName(),
         topics: gameSession.getTopics(),
+        players: gameSession.getPlayers(),
       });
 
       return gameSession;

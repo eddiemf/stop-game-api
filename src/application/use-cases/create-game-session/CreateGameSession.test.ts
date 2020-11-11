@@ -16,6 +16,8 @@ describe('CreateGameSession', () => {
     dependencies.makeGameSession.mockReturnValue(fakeGameSession);
     fakeGameSession.getHash.mockReturnValue('mocked hash');
     fakeGameSession.getName.mockReturnValue('mocked name');
+    fakeGameSession.getTopics.mockReturnValue('mocked topics');
+    fakeGameSession.getPlayers.mockReturnValue('mocked players');
   });
 
   it('creates a game session entity with the given name', async () => {
@@ -28,6 +30,8 @@ describe('CreateGameSession', () => {
     expect(dependencies.gameSessionRepository.save).toBeCalledWith({
       hash: 'mocked hash',
       name: 'mocked name',
+      topics: 'mocked topics',
+      players: 'mocked players',
     });
   });
 

@@ -1,5 +1,5 @@
 import { IGameSessionRepository } from '../../../repositories';
-import { genericErrors, inputErrors, INPUT_ERROR } from '../../constants';
+import { genericErrors, inputErrors, INPUT_ERROR, VALIDATION_ERROR } from '../../constants';
 import { IGameSession, IMakeGameSession } from '../../entities';
 
 interface IDependencies {
@@ -25,18 +25,25 @@ export const buildRenameGameSession = ({
       const gameSessionData = await gameSessionRepository.findByHash(gameSessionHash);
       if (!gameSessionData) throw inputErrors.GAME_SESSION_NOT_FOUND;
 
-      const gameSession = makeGameSession(gameSessionData);
+      let gameSession;
+      try {
+        gameSession = makeGameSession(gameSessionData);
+      } catch (error) {
+        throw genericErrors.INTERNAL_ERROR;
+      }
+
       gameSession.rename(name);
 
       await gameSessionRepository.save({
         hash: gameSession.getHash(),
         name: gameSession.getName(),
         topics: gameSession.getTopics(),
+        players: gameSession.getPlayers(),
       });
 
       return gameSession;
     } catch (error) {
-      if (error.type === INPUT_ERROR) throw error;
+      if (error.type === VALIDATION_ERROR || error.type === INPUT_ERROR) throw error;
 
       throw genericErrors.INTERNAL_ERROR;
     }

@@ -20,6 +20,7 @@ describe('RemoveTopic', () => {
     fakeGameSession.getHash.mockReturnValue('mocked hash');
     fakeGameSession.getName.mockReturnValue('mocked name');
     fakeGameSession.getTopics.mockReturnValue('mocked topics');
+    fakeGameSession.getPlayers.mockReturnValue('mocked players');
   });
 
   it('searches for the given game session hash in the repository', async () => {
@@ -66,6 +67,7 @@ describe('RemoveTopic', () => {
       hash: 'mocked hash',
       name: 'mocked name',
       topics: 'mocked topics',
+      players: 'mocked players',
     });
   });
 
