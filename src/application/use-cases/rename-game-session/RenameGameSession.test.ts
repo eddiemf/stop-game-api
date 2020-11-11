@@ -1,15 +1,15 @@
 import { genericErrors, inputErrors, INPUT_ERROR } from '../../constants';
 import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
-import { buildRenameTopic } from './RenameTopic';
+import { buildRenameGameSession } from './RenameGameSession';
 
-describe('AddTopic', () => {
+describe('RenameGameSession', () => {
   const dependencies = {
     gameSessionRepository: gameSessionRepositoryMock,
     makeGameSession: jest.fn(),
   };
 
-  const renameTopic = buildRenameTopic(dependencies);
+  const renameGameSession = buildRenameGameSession(dependencies);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,50 +25,48 @@ describe('AddTopic', () => {
   });
 
   it('searches for the given game session hash in the repository', async () => {
-    await renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' });
+    await renameGameSession({ gameSessionHash: '1', name: 'some name' });
     expect(dependencies.gameSessionRepository.findByHash).toBeCalledWith('1');
   });
 
   it('throws an internal error if the search for the game session throws', async () => {
     dependencies.gameSessionRepository.findByHash.mockRejectedValue('some error');
-    await expect(
-      renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' })
-    ).rejects.toEqual(genericErrors.INTERNAL_ERROR);
+    await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
+      genericErrors.INTERNAL_ERROR
+    );
   });
 
   it('throws an input error if the game session could not be found', async () => {
     dependencies.gameSessionRepository.findByHash.mockResolvedValue(null);
-    await expect(
-      renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' })
-    ).rejects.toEqual(inputErrors.GAME_SESSION_NOT_FOUND);
+    await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
+      inputErrors.GAME_SESSION_NOT_FOUND
+    );
   });
 
   it('creates a game session entity with the found game session data', async () => {
-    await renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' });
+    await renameGameSession({ gameSessionHash: '1', name: 'some name' });
     expect(dependencies.makeGameSession).toBeCalledWith({
       hash: 'mocked hash',
       name: 'mocked name',
     });
   });
 
-  it('renames the topic with the given topic id in the game session entity', async () => {
-    await renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' });
-    expect(fakeGameSession.renameTopic).toBeCalledWith('id', 'some name');
+  it('renames the game session entity with the given new name', async () => {
+    await renameGameSession({ gameSessionHash: '1', name: 'some name' });
+    expect(fakeGameSession.rename).toBeCalledWith('some name');
   });
 
-  it('throws the caught error if game session throws an input error while renaming a topic', async () => {
+  it('throws the caught error if game session throws an input error while renaming', async () => {
     dependencies.makeGameSession.mockImplementation(() => {
       throw { type: INPUT_ERROR };
     });
-    await expect(
-      renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' })
-    ).rejects.toEqual({
+    await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual({
       type: INPUT_ERROR,
     });
   });
 
   it('saves the game session entity to the repository', async () => {
-    await renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' });
+    await renameGameSession({ gameSessionHash: '1', name: 'some name' });
     expect(dependencies.gameSessionRepository.save).toBeCalledWith({
       hash: 'mocked hash',
       name: 'mocked name',
@@ -78,14 +76,14 @@ describe('AddTopic', () => {
 
   it('throws an internal error if saving to the repository throws', async () => {
     dependencies.gameSessionRepository.save.mockRejectedValue('some error');
-    await expect(
-      renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' })
-    ).rejects.toEqual(genericErrors.INTERNAL_ERROR);
+    await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
+      genericErrors.INTERNAL_ERROR
+    );
   });
 
   it('returns the game session entity', async () => {
-    await expect(
-      renameTopic({ gameSessionHash: '1', topicId: 'id', name: 'some name' })
-    ).resolves.toEqual(fakeGameSession);
+    await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).resolves.toEqual(
+      fakeGameSession
+    );
   });
 });
