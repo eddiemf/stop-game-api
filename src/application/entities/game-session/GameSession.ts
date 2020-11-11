@@ -69,6 +69,8 @@ export const makeGameSession: IMakeGameSession = ({
     const error = validate({ topicName: topic.name }, validationConstraints);
     if (error) throw error;
 
+    if (topics.find(({ id }) => topic.id === id)) throw inputErrors.TOPIC_ALREADY_IN_GAME_SESSION;
+
     topics = appendToList(topics, topic);
   };
 

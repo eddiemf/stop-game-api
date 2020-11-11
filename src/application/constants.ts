@@ -10,6 +10,7 @@ export const inputErrorKeys = {
   GAME_SESSION_NOT_FOUND: 'INPUT_ERROR::GAME_SESSION_NOT_FOUND',
   PLAYER_NOT_FOUND: 'INPUT_ERROR::PLAYER_NOT_FOUND',
   PLAYER_ALREADY_IN_GAME_SESSION: 'INPUT_ERROR::PLAYER_ALREADY_IN_GAME_SESSION',
+  TOPIC_ALREADY_IN_GAME_SESSION: 'INPUT_ERROR::TOPIC_ALREADY_IN_GAME_SESSION',
 };
 
 export const VALIDATION_ERROR = 'VALIDATION_ERROR';
@@ -29,6 +30,11 @@ export const inputErrors = {
     type: INPUT_ERROR,
     errorKey: inputErrorKeys.TOPIC_NOT_FOUND,
     message: 'The given topicId was not found in the game session',
+  },
+  TOPIC_ALREADY_IN_GAME_SESSION: {
+    type: INPUT_ERROR,
+    errorKey: inputErrorKeys.TOPIC_ALREADY_IN_GAME_SESSION,
+    message: 'The given topicId is already in the game session',
   },
   PLAYER_NOT_FOUND: {
     type: INPUT_ERROR,

@@ -153,6 +153,14 @@ describe('GameSession', () => {
         })
       );
     });
+
+    it('throws an input error if the given topic id is already in the game session', () => {
+      const topic = { id: '1', name: 'some name' };
+      const gameSession = makeGameSession({ name: 'Some name', topics: [topic] });
+      expect(() => gameSession.addTopic(topic)).toThrow(
+        expect.objectContaining(inputErrors.TOPIC_ALREADY_IN_GAME_SESSION)
+      );
+    });
   });
 
   describe('removeTopic', () => {
