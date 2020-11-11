@@ -7,6 +7,7 @@ export const validationErrorKeys = {
 
 export const inputErrorKeys = {
   TOPIC_NOT_FOUND: 'INPUT_ERROR::TOPIC_NOT_FOUND',
+  GAME_SESSION_NOT_FOUND: 'INPUT_ERROR::GAME_SESSION_NOT_FOUND',
 };
 
 export const VALIDATION_ERROR = 'VALIDATION_ERROR';
@@ -14,4 +15,17 @@ export const INPUT_ERROR = 'INPUT_ERROR';
 
 export const genericErrors = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+};
+
+export const inputErrors = {
+  GAME_SESSION_NOT_FOUND: {
+    type: INPUT_ERROR,
+    errorKey: inputErrorKeys.GAME_SESSION_NOT_FOUND,
+    message: 'The given game session hash was not found',
+  },
+  TOPIC_NOT_FOUND: {
+    type: INPUT_ERROR,
+    errorKey: inputErrorKeys.TOPIC_NOT_FOUND,
+    message: 'The given topicId was not found in the game session',
+  },
 };

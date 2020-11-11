@@ -1,5 +1,4 @@
-import { validationErrorKeys, VALIDATION_ERROR } from '../../constants';
-import { inputErrors } from './errors';
+import { inputErrors, validationErrorKeys, VALIDATION_ERROR } from '../../constants';
 import { makeGameSession } from './GameSession';
 
 describe('GameSession', () => {

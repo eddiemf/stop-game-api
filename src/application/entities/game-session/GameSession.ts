@@ -1,7 +1,7 @@
 import cuid from 'cuid';
+import { inputErrors } from '../../constants';
 import { validate } from '../../core';
 import { appendToList, insertToList, removeFromList } from '../../utils';
-import { inputErrors } from './errors';
 
 interface ITopic {
   id: string;
