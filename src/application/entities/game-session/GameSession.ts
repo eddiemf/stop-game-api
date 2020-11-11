@@ -8,10 +8,16 @@ interface ITopic {
   name: string;
 }
 
+interface IPlayer {
+  id: string;
+  name: string;
+}
+
 interface IGameSessionProps {
   hash?: string;
   name: string;
   topics?: ITopic[];
+  players?: IPlayer[];
 }
 
 export interface IGameSession {
@@ -22,6 +28,9 @@ export interface IGameSession {
   addTopic: (topic: ITopic) => void;
   removeTopic: (topicId: string) => void;
   renameTopic: (topicId: string, newName: string) => void;
+  getPlayers: () => IPlayer[];
+  addPlayer: (player: IPlayer) => void;
+  removePlayer: (playerId: string) => void;
 }
 
 export interface IMakeGameSession {
@@ -33,12 +42,14 @@ const validationConstraints = {
   name: { type: 'string', length: { minimum: 2, maximum: 30 } },
   topicId: { type: 'string' },
   topicName: { type: 'string', length: { minimum: 2, maximum: 30 } },
+  playerName: { type: 'string', length: { minimum: 2, maximum: 30 } },
 };
 
 export const makeGameSession: IMakeGameSession = ({
   hash = cuid.slug(),
   name,
   topics = [],
+  players = [],
 }): IGameSession => {
   const error = validate({ hash, name }, validationConstraints);
   if (error) throw error;
@@ -81,6 +92,22 @@ export const makeGameSession: IMakeGameSession = ({
     topics = insertToList(topics, newTopic, topicIndex);
   };
 
+  const getPlayers = () => players;
+
+  const addPlayer = (player: IPlayer) => {
+    const error = validate({ playerName: player.name }, validationConstraints);
+    if (error) throw error;
+
+    players = appendToList(players, player);
+  };
+
+  const removePlayer = (playerId: string) => {
+    const playerIndex = players.findIndex(({ id }) => id === playerId);
+    if (playerIndex === -1) throw inputErrors.PLAYER_NOT_FOUND;
+
+    players = removeFromList(players, playerIndex);
+  };
+
   return {
     getHash,
     getName,
@@ -89,5 +116,8 @@ export const makeGameSession: IMakeGameSession = ({
     addTopic,
     removeTopic,
     renameTopic,
+    getPlayers,
+    addPlayer,
+    removePlayer,
   };
 };

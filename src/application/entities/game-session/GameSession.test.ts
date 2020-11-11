@@ -233,4 +233,76 @@ describe('GameSession', () => {
       );
     });
   });
+
+  describe('getPlayers', () => {
+    it('returns the given players', () => {
+      const players = [
+        { id: '1', name: 'player 1' },
+        { id: '2', name: 'player 2' },
+      ];
+      const gameSession = makeGameSession({ name: 'Some name', players });
+      expect(gameSession.getPlayers()).toEqual(players);
+    });
+
+    it('returns an empty array if no players were given', () => {
+      const gameSession = makeGameSession({ name: 'Some name' });
+      expect(gameSession.getPlayers()).toEqual([]);
+    });
+  });
+
+  describe('addPlayer', () => {
+    it('adds a player to the game session', () => {
+      const player = { id: '1', name: 'player' };
+      const gameSession = makeGameSession({ name: 'Some name' });
+      gameSession.addPlayer(player);
+      expect(gameSession.getPlayers()).toEqual([player]);
+    });
+
+    it('throws a validation error if the given name is shorter than 2 characters', () => {
+      const player = { id: '1', name: 'a' };
+      const gameSession = makeGameSession({ name: 'Some name' });
+      expect(() => gameSession.addPlayer(player)).toThrow(
+        expect.objectContaining({
+          type: VALIDATION_ERROR,
+          errorKey: validationErrorKeys.STRING_TOO_SHORT,
+          message: 'Player name is too short (minimum is 2 characters)',
+        })
+      );
+    });
+
+    it('throws a validation error if the given name is bigger than 30 characters', () => {
+      const player = { id: '1', name: 'An incredibly long name with lots of characters' };
+      const gameSession = makeGameSession({ name: 'Some name' });
+      expect(() => gameSession.addPlayer(player)).toThrow(
+        expect.objectContaining({
+          type: VALIDATION_ERROR,
+          errorKey: validationErrorKeys.STRING_TOO_LONG,
+          message: 'Player name is too long (maximum is 30 characters)',
+        })
+      );
+    });
+  });
+
+  describe('removePlayer', () => {
+    it('removes a player from the game session', () => {
+      const players = [
+        { id: '1', name: 'player 1' },
+        { id: '2', name: 'player 2' },
+      ];
+      const gameSession = makeGameSession({ name: 'Some name', players });
+      gameSession.removePlayer('1');
+      expect(gameSession.getPlayers()).toEqual([{ id: '2', name: 'player 2' }]);
+    });
+
+    it('throws an input error if the given player id is not in the game session', () => {
+      const players = [
+        { id: '1', name: 'player 1' },
+        { id: '2', name: 'player 2' },
+      ];
+      const gameSession = makeGameSession({ name: 'Some name', players });
+      expect(() => gameSession.removePlayer('3')).toThrow(
+        expect.objectContaining(inputErrors.PLAYER_NOT_FOUND)
+      );
+    });
+  });
 });

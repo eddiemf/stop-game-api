@@ -8,6 +8,7 @@ export const validationErrorKeys = {
 export const inputErrorKeys = {
   TOPIC_NOT_FOUND: 'INPUT_ERROR::TOPIC_NOT_FOUND',
   GAME_SESSION_NOT_FOUND: 'INPUT_ERROR::GAME_SESSION_NOT_FOUND',
+  PLAYER_NOT_FOUND: 'INPUT_ERROR::PLAYER_NOT_FOUND',
 };
 
 export const VALIDATION_ERROR = 'VALIDATION_ERROR';
@@ -27,5 +28,10 @@ export const inputErrors = {
     type: INPUT_ERROR,
     errorKey: inputErrorKeys.TOPIC_NOT_FOUND,
     message: 'The given topicId was not found in the game session',
+  },
+  PLAYER_NOT_FOUND: {
+    type: INPUT_ERROR,
+    errorKey: inputErrorKeys.PLAYER_NOT_FOUND,
+    message: 'The given playerId was not found in the game session',
   },
 };
