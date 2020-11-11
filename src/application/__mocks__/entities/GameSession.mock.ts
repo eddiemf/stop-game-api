@@ -8,4 +8,5 @@ export const fakeGameSession = {
   renameTopic: jest.fn(),
   getPlayers: jest.fn(),
   addPlayer: jest.fn(),
+  removePlayer: jest.fn(),
 };
