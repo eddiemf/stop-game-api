@@ -1,4 +1,5 @@
-import { genericErrors, inputErrors, INPUT_ERROR, VALIDATION_ERROR } from '../../constants';
+import { genericErrors } from '../../constants';
+import { mockWithInputError, mockWithInternalError, mockWithValidationError } from '../../utils';
 import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
 import { buildRenameGameSession } from './RenameGameSession';
@@ -6,7 +7,7 @@ import { buildRenameGameSession } from './RenameGameSession';
 describe('RenameGameSession', () => {
   const dependencies = {
     gameSessionRepository: gameSessionRepositoryMock,
-    makeGameSession: jest.fn(),
+    findGameSession: jest.fn(),
   };
 
   const renameGameSession = buildRenameGameSession(dependencies);
@@ -15,7 +16,7 @@ describe('RenameGameSession', () => {
     jest.clearAllMocks();
     dependencies.gameSessionRepository.save.mockResolvedValue(true);
     dependencies.gameSessionRepository.findByHash.mockResolvedValue('mocked game session');
-    dependencies.makeGameSession.mockReturnValue(fakeGameSession);
+    dependencies.findGameSession.mockReturnValue(fakeGameSession);
     fakeGameSession.getHash.mockReturnValue('mocked hash');
     fakeGameSession.getName.mockReturnValue('mocked name');
     fakeGameSession.getTopics.mockReturnValue('mocked topics');
@@ -23,37 +24,22 @@ describe('RenameGameSession', () => {
     fakeGameSession.rename.mockReturnValue(undefined);
   });
 
-  it('searches for the given game session hash in the repository', async () => {
+  it('finds the game session with the given hash', async () => {
     await renameGameSession({ gameSessionHash: '1', name: 'some name' });
-    expect(dependencies.gameSessionRepository.findByHash).toBeCalledWith('1');
+    expect(dependencies.findGameSession).toBeCalledWith({ hash: '1' });
   });
 
-  it('throws an internal error if the search for the game session throws', async () => {
-    dependencies.gameSessionRepository.findByHash.mockRejectedValue('some error');
+  it('throws the caught error if finding the game session throws an internal error', async () => {
+    const internalError = mockWithInternalError(dependencies.findGameSession);
     await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      genericErrors.INTERNAL_ERROR
+      internalError
     );
   });
 
-  it('throws an input error if the game session could not be found', async () => {
-    dependencies.gameSessionRepository.findByHash.mockResolvedValue(null);
+  it('throws the caught error if finding the game session throws an input error', async () => {
+    const inputError = mockWithInputError(dependencies.findGameSession);
     await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      inputErrors.GAME_SESSION_NOT_FOUND
-    );
-  });
-
-  it('creates a game session entity with the found game session data', async () => {
-    await renameGameSession({ gameSessionHash: '1', name: 'some name' });
-    expect(dependencies.makeGameSession).toBeCalledWith('mocked game session');
-  });
-
-  it('throws an internal error if game session entity creation throws a validation error', async () => {
-    const validationError = { type: VALIDATION_ERROR, key: 'some key' };
-    dependencies.makeGameSession.mockImplementationOnce(() => {
-      throw validationError;
-    });
-    await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      genericErrors.INTERNAL_ERROR
+      inputError
     );
   });
 
@@ -62,21 +48,15 @@ describe('RenameGameSession', () => {
     expect(fakeGameSession.rename).toBeCalledWith('some name');
   });
 
-  it('throws the caught error if game session throws an input error while renaming', async () => {
-    const inputError = { type: INPUT_ERROR };
-    fakeGameSession.rename.mockImplementation(() => {
-      throw inputError;
-    });
+  it('throws the caught error if game session throws an input error when renaming', async () => {
+    const inputError = mockWithInputError(fakeGameSession.rename);
     await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
       inputError
     );
   });
 
-  it('throws the caught error if game session throws a validation error while renaming', async () => {
-    const validationError = { type: VALIDATION_ERROR, key: 'some key' };
-    fakeGameSession.rename.mockImplementationOnce(() => {
-      throw validationError;
-    });
+  it('throws the caught error if game session throws a validation error when renaming', async () => {
+    const validationError = mockWithValidationError(fakeGameSession.rename);
     await expect(renameGameSession({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
       validationError
     );
