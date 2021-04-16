@@ -1,10 +1,11 @@
 import { IGameSessionRepository } from '../../../repositories';
-import { genericErrors, inputErrors, INPUT_ERROR, VALIDATION_ERROR } from '../../constants';
-import { IGameSession, IMakeGameSession } from '../../entities/game-session';
+import { genericErrors, INPUT_ERROR, VALIDATION_ERROR } from '../../constants';
+import { IGameSession } from '../../entities/game-session';
+import { IFindGameSession } from '../find-game-session';
 
 interface IDependencies {
   gameSessionRepository: IGameSessionRepository;
-  makeGameSession: IMakeGameSession;
+  findGameSession: IFindGameSession;
 }
 
 interface IProps {
@@ -18,20 +19,11 @@ export interface ILeaveGameSession {
 
 export const buildLeaveGameSession = ({
   gameSessionRepository,
-  makeGameSession,
+  findGameSession,
 }: IDependencies): ILeaveGameSession => {
   const leaveGameSession: ILeaveGameSession = async ({ hash, playerId }) => {
     try {
-      const gameSessionData = await gameSessionRepository.findByHash(hash);
-      if (!gameSessionData) throw inputErrors.GAME_SESSION_NOT_FOUND;
-
-      let gameSession;
-      try {
-        gameSession = makeGameSession(gameSessionData);
-      } catch (error) {
-        throw genericErrors.INTERNAL_ERROR;
-      }
-
+      const gameSession = await findGameSession({ hash });
       gameSession.removePlayer(playerId);
 
       await gameSessionRepository.save({
