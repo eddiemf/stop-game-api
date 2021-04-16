@@ -1,4 +1,5 @@
-import { genericErrors, inputErrors, INPUT_ERROR, VALIDATION_ERROR } from '../../constants';
+import { genericErrors } from '../../constants';
+import { mockWithInputError, mockWithInternalError, mockWithValidationError } from '../../utils';
 import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
 import { buildAddTopic } from './AddTopic';
@@ -6,7 +7,7 @@ import { buildAddTopic } from './AddTopic';
 describe('AddTopic', () => {
   const dependencies = {
     gameSessionRepository: gameSessionRepositoryMock,
-    makeGameSession: jest.fn(),
+    findGameSession: jest.fn(),
     generateId: jest.fn(),
   };
 
@@ -17,7 +18,7 @@ describe('AddTopic', () => {
     dependencies.generateId.mockReturnValue('id');
     dependencies.gameSessionRepository.save.mockResolvedValue(true);
     dependencies.gameSessionRepository.findByHash.mockResolvedValue('mocked game session');
-    dependencies.makeGameSession.mockReturnValue(fakeGameSession);
+    dependencies.findGameSession.mockReturnValue(fakeGameSession);
     fakeGameSession.getHash.mockReturnValue('mocked hash');
     fakeGameSession.getName.mockReturnValue('mocked name');
     fakeGameSession.getTopics.mockReturnValue('mocked topics');
@@ -25,37 +26,27 @@ describe('AddTopic', () => {
     fakeGameSession.addTopic.mockReturnValue(undefined);
   });
 
-  it('searches for the given game session hash in the repository', async () => {
+  it('finds the game session', async () => {
     await addTopic({ gameSessionHash: '1', name: 'some name' });
-    expect(dependencies.gameSessionRepository.findByHash).toBeCalledWith('1');
+    expect(dependencies.findGameSession).toBeCalledWith({ hash: '1' });
   });
 
-  it('throws an internal error if the search for the game session throws', async () => {
-    dependencies.gameSessionRepository.findByHash.mockRejectedValue('some error');
+  it('throws an input error if finding game session throws an input error', async () => {
+    const inputError = mockWithInputError(dependencies.findGameSession);
+    await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(inputError);
+  });
+
+  it('throws a validation error if finding game session throws a validation error', async () => {
+    const validationError = mockWithValidationError(dependencies.findGameSession);
     await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      genericErrors.INTERNAL_ERROR
+      validationError
     );
   });
 
-  it('throws an input error if the game session could not be found', async () => {
-    dependencies.gameSessionRepository.findByHash.mockResolvedValue(null);
+  it('throws an internal error if finding game session throws an internal error', async () => {
+    const internalError = mockWithInternalError(dependencies.findGameSession);
     await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      inputErrors.GAME_SESSION_NOT_FOUND
-    );
-  });
-
-  it('creates a game session entity with the found game session data', async () => {
-    await addTopic({ gameSessionHash: '1', name: 'some name' });
-    expect(dependencies.makeGameSession).toBeCalledWith('mocked game session');
-  });
-
-  it('throws an internal error if game session entity creation throws a validation error', async () => {
-    const validationError = { type: VALIDATION_ERROR, key: 'some key' };
-    dependencies.makeGameSession.mockImplementationOnce(() => {
-      throw validationError;
-    });
-    await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      genericErrors.INTERNAL_ERROR
+      internalError
     );
   });
 
@@ -65,19 +56,12 @@ describe('AddTopic', () => {
   });
 
   it('throws the caught error if game session throws an input error while adding a topic', async () => {
-    fakeGameSession.addTopic.mockImplementation(() => {
-      throw { type: INPUT_ERROR };
-    });
-    await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      expect.objectContaining({ type: INPUT_ERROR })
-    );
+    const inputError = mockWithInputError(fakeGameSession.addTopic);
+    await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(inputError);
   });
 
   it('throws the caught error if game session throws a validation error while adding a topic', async () => {
-    const validationError = { type: VALIDATION_ERROR, key: 'some key' };
-    fakeGameSession.addTopic.mockImplementationOnce(() => {
-      throw validationError;
-    });
+    const validationError = mockWithValidationError(fakeGameSession.addTopic);
     await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
       validationError
     );

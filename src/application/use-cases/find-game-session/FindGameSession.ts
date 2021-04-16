@@ -12,7 +12,7 @@ interface IProps {
 }
 
 export interface IFindGameSession {
-  (props: IProps): Promise<IGameSession | null>;
+  (props: IProps): Promise<IGameSession>;
 }
 
 export const buildFindGameSession = ({

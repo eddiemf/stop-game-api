@@ -1,3 +1,9 @@
+export interface IError {
+  type: string;
+  errorKey: string;
+  message: string;
+}
+
 export const validationErrorKeys = {
   UNKNOWN: 'VALIDATION_ERROR::UNKNOWN',
   MUST_BE_STRING: 'VALIDATION_ERROR::MUST_BE_STRING',
@@ -15,6 +21,7 @@ export const inputErrorKeys = {
 
 export const VALIDATION_ERROR = 'VALIDATION_ERROR';
 export const INPUT_ERROR = 'INPUT_ERROR';
+export const INTERNAL_ERROR = 'INTERNAL_ERROR';
 
 export const genericErrors = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
