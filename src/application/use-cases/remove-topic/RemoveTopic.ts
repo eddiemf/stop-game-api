@@ -1,10 +1,11 @@
 import { IGameSessionRepository } from '../../../repositories';
-import { genericErrors, inputErrors, INPUT_ERROR } from '../../constants';
-import { IGameSession, IMakeGameSession } from '../../entities';
+import { genericErrors, INPUT_ERROR } from '../../constants';
+import { IGameSession } from '../../entities';
+import { IFindGameSession } from '../find-game-session';
 
 interface IDependencies {
   gameSessionRepository: IGameSessionRepository;
-  makeGameSession: IMakeGameSession;
+  findGameSession: IFindGameSession;
 }
 
 interface IProps {
@@ -18,14 +19,11 @@ export interface IRemoveTopic {
 
 export const buildRemoveTopic = ({
   gameSessionRepository,
-  makeGameSession,
+  findGameSession,
 }: IDependencies): IRemoveTopic => {
   const removeTopic: IRemoveTopic = async ({ gameSessionHash, topicId }) => {
     try {
-      const gameSessionData = await gameSessionRepository.findByHash(gameSessionHash);
-      if (!gameSessionData) throw inputErrors.GAME_SESSION_NOT_FOUND;
-
-      const gameSession = makeGameSession(gameSessionData);
+      const gameSession = await findGameSession({ hash: gameSessionHash });
       gameSession.removeTopic(topicId);
 
       await gameSessionRepository.save({
