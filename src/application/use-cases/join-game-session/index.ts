@@ -1,7 +1,7 @@
 import { gameSessionRepository } from '../../../repositories';
-import { makeGameSession } from '../../entities';
+import { findGameSession } from '../find-game-session';
 import { buildJoinGameSession, IJoinGameSession } from './JoinGameSession';
 
-const joinGameSession = buildJoinGameSession({ gameSessionRepository, makeGameSession });
+const joinGameSession = buildJoinGameSession({ gameSessionRepository, findGameSession });
 
 export { IJoinGameSession, joinGameSession };

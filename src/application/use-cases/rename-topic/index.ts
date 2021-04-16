@@ -1,7 +1,7 @@
 import { gameSessionRepository } from '../../../repositories';
-import { makeGameSession } from '../../entities';
+import { findGameSession } from '../find-game-session';
 import { buildRenameTopic, IRenameTopic } from './RenameTopic';
 
-const renameTopic = buildRenameTopic({ gameSessionRepository, makeGameSession });
+const renameTopic = buildRenameTopic({ gameSessionRepository, findGameSession });
 
 export { renameTopic, IRenameTopic };
