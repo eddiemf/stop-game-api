@@ -24,7 +24,7 @@ export const INPUT_ERROR = 'INPUT_ERROR';
 export const INTERNAL_ERROR = 'INTERNAL_ERROR';
 
 export const genericErrors = {
-  INTERNAL_ERROR: 'INTERNAL_ERROR',
+  INTERNAL_ERROR: INTERNAL_ERROR,
 };
 
 export const inputErrors = {
