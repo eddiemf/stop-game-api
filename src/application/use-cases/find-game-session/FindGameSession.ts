@@ -1,5 +1,5 @@
 import { IGameSessionRepository } from '../../../repositories';
-import { genericErrors } from '../../constants';
+import { genericErrors, inputErrors, INPUT_ERROR } from '../../constants';
 import { IGameSession, IMakeGameSession } from '../../entities/game-session';
 
 interface IDependencies {
@@ -22,12 +22,12 @@ export const buildFindGameSession = ({
   const findGameSession: IFindGameSession = async ({ hash }) => {
     try {
       const gameSessionData = await gameSessionRepository.findByHash(hash);
-      if (!gameSessionData) {
-        return null;
-      }
+      if (!gameSessionData) throw inputErrors.GAME_SESSION_NOT_FOUND;
 
       return makeGameSession(gameSessionData);
     } catch (error) {
+      if (error.type === INPUT_ERROR) throw error;
+
       throw genericErrors.INTERNAL_ERROR;
     }
   };

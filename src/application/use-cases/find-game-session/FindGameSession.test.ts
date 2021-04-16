@@ -1,4 +1,4 @@
-import { genericErrors, VALIDATION_ERROR } from '../../constants';
+import { genericErrors, inputErrors, VALIDATION_ERROR } from '../../constants';
 import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
 import { buildFindGameSession } from './FindGameSession';
@@ -32,9 +32,11 @@ describe('FindGameSession', () => {
     );
   });
 
-  it.each(falsyValues)('returns `null` if the search result is %p', async () => {
-    dependencies.gameSessionRepository.findByHash.mockResolvedValue(null);
-    await expect(findGameSession({ hash: 'some hash' })).resolves.toEqual(null);
+  it.each(falsyValues)('throws an input error if if the search result is %p', async (value) => {
+    dependencies.gameSessionRepository.findByHash.mockResolvedValue(value);
+    await expect(findGameSession({ hash: 'some hash' })).rejects.toEqual(
+      inputErrors.GAME_SESSION_NOT_FOUND
+    );
   });
 
   it('creates a game session entity with the data found in the game session repository', async () => {
