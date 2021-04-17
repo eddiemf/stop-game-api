@@ -1,3 +1,5 @@
+import { GameSessionState } from '../../application/entities/game-session/GameSession';
+
 export interface ITopicData {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ export interface IGameSessionData {
   name: string;
   topics: ITopicData[];
   players: IPlayerData[];
+  state: GameSessionState;
 }
 
 export interface IGameSessionRepository {

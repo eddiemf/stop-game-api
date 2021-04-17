@@ -13,11 +13,19 @@ interface IPlayer {
   name: string;
 }
 
+export enum GameSessionState {
+  lobby = 'lobby',
+  preMatch = 'pre-match',
+  inMatch = 'in-match',
+  postMatch = 'post-match',
+}
+
 interface IGameSessionProps {
   hash?: string;
   name: string;
   topics?: ITopicData[];
   players?: IPlayer[];
+  state?: GameSessionState;
 }
 
 export interface IGameSession {
@@ -31,6 +39,8 @@ export interface IGameSession {
   getPlayers: () => IPlayer[];
   addPlayer: (player: IPlayer) => void;
   removePlayer: (playerId: string) => void;
+  getState: () => GameSessionState;
+  setState: (state: GameSessionState) => void;
   getData: () => IGameSessionData;
 }
 
@@ -51,6 +61,7 @@ export const makeGameSession: IMakeGameSession = ({
   name,
   topics = [],
   players = [],
+  state = GameSessionState.lobby,
 }): IGameSession => {
   const error = validate({ hash, name }, validationConstraints);
   if (error) throw error;
@@ -70,6 +81,8 @@ export const makeGameSession: IMakeGameSession = ({
   const getTopics = () => _topics;
 
   const addTopic = (newTopic: ITopic) => {
+    if (state !== GameSessionState.lobby) throw inputErrors.GAME_SESSION_NOT_IN_LOBBY;
+
     if (_topics.find((topic) => newTopic.getId() === topic.getId()))
       throw inputErrors.TOPIC_ALREADY_IN_GAME_SESSION;
 
@@ -77,6 +90,8 @@ export const makeGameSession: IMakeGameSession = ({
   };
 
   const removeTopic = (topicId: string) => {
+    if (state !== GameSessionState.lobby) throw inputErrors.GAME_SESSION_NOT_IN_LOBBY;
+
     const topicIndex = _topics.findIndex((topic) => topic.getId() === topicId);
     if (topicIndex === -1) throw inputErrors.TOPIC_NOT_FOUND;
 
@@ -84,6 +99,8 @@ export const makeGameSession: IMakeGameSession = ({
   };
 
   const renameTopic = (topicId: string, newName: string) => {
+    if (state !== GameSessionState.lobby) throw inputErrors.GAME_SESSION_NOT_IN_LOBBY;
+
     const topic = _topics.find((topic) => topic.getId() === topicId);
     if (!topic) throw inputErrors.TOPIC_NOT_FOUND;
 
@@ -109,11 +126,15 @@ export const makeGameSession: IMakeGameSession = ({
     players = removeFromList(players, playerIndex);
   };
 
+  const getState = () => state;
+  const setState = (newState: GameSessionState) => (state = newState);
+
   const getData = () => ({
     hash: getHash(),
     name: getName(),
     topics: getTopics().map((topic) => topic.getData()),
     players: getPlayers(),
+    state: getState(),
   });
 
   return {
@@ -127,6 +148,8 @@ export const makeGameSession: IMakeGameSession = ({
     getPlayers,
     addPlayer,
     removePlayer,
+    getState,
+    setState,
     getData,
   };
 };

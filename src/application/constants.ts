@@ -14,6 +14,7 @@ export const validationErrorKeys = {
 export const inputErrorKeys = {
   TOPIC_NOT_FOUND: 'INPUT_ERROR::TOPIC_NOT_FOUND',
   GAME_SESSION_NOT_FOUND: 'INPUT_ERROR::GAME_SESSION_NOT_FOUND',
+  GAME_SESSION_NOT_IN_LOBBY: 'INPUT_ERROR::GAME_SESSION_NOT_IN_LOBBY',
   PLAYER_NOT_FOUND: 'INPUT_ERROR::PLAYER_NOT_FOUND',
   PLAYER_ALREADY_IN_GAME_SESSION: 'INPUT_ERROR::PLAYER_ALREADY_IN_GAME_SESSION',
   TOPIC_ALREADY_IN_GAME_SESSION: 'INPUT_ERROR::TOPIC_ALREADY_IN_GAME_SESSION',
@@ -32,6 +33,11 @@ export const inputErrors = {
     type: INPUT_ERROR,
     errorKey: inputErrorKeys.GAME_SESSION_NOT_FOUND,
     message: 'The given game session hash was not found',
+  },
+  GAME_SESSION_NOT_IN_LOBBY: {
+    type: INPUT_ERROR,
+    errorKey: inputErrorKeys.GAME_SESSION_NOT_IN_LOBBY,
+    message: 'The given game session is not in lobby state',
   },
   TOPIC_NOT_FOUND: {
     type: INPUT_ERROR,

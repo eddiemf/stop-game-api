@@ -1,6 +1,6 @@
 import { inputErrors, validationErrorKeys, VALIDATION_ERROR } from '../../constants';
 import { makeTopic } from '../topic';
-import { makeGameSession } from './GameSession';
+import { GameSessionState, makeGameSession } from './GameSession';
 
 describe('GameSession', () => {
   describe('creation', () => {
@@ -133,6 +133,21 @@ describe('GameSession', () => {
       expect(gameSession.getTopics()).toEqual([topic]);
     });
 
+    it.each([GameSessionState.preMatch, GameSessionState.inMatch, GameSessionState.postMatch])(
+      'throws an input error if the session state is %',
+      (sessionState) => {
+        const topic = { id: '1', name: 'some name', value: '' };
+        const gameSession = makeGameSession({
+          name: 'Some name',
+          topics: [topic],
+          state: sessionState,
+        });
+        expect(() => gameSession.addTopic(makeTopic(topic))).toThrow(
+          expect.objectContaining(inputErrors.GAME_SESSION_NOT_IN_LOBBY)
+        );
+      }
+    );
+
     it('throws an input error if the given topic id is already in the game session', () => {
       const topic = { id: '1', name: 'some name', value: '' };
       const gameSession = makeGameSession({ name: 'Some name', topics: [topic] });
@@ -151,6 +166,21 @@ describe('GameSession', () => {
       gameSession.removeTopic('1');
       expect(gameSession.getTopics()[0].getName()).toEqual('topic 2');
     });
+
+    it.each([GameSessionState.preMatch, GameSessionState.inMatch, GameSessionState.postMatch])(
+      'throws an input error if the session state is %',
+      (sessionState) => {
+        const topic = { id: '1', name: 'some name', value: '' };
+        const gameSession = makeGameSession({
+          name: 'Some name',
+          topics: [topic],
+          state: sessionState,
+        });
+        expect(() => gameSession.removeTopic('1')).toThrow(
+          expect.objectContaining(inputErrors.GAME_SESSION_NOT_IN_LOBBY)
+        );
+      }
+    );
 
     it('throws an input error if the given topic id is not in the game session', () => {
       const topics = [
@@ -173,6 +203,21 @@ describe('GameSession', () => {
       gameSession.renameTopic('2', 'another name');
       expect(gameSession.getTopics()[1].getName()).toEqual('another name');
     });
+
+    it.each([GameSessionState.preMatch, GameSessionState.inMatch, GameSessionState.postMatch])(
+      'throws an input error if the session state is %',
+      (sessionState) => {
+        const topic = { id: '1', name: 'some name', value: '' };
+        const gameSession = makeGameSession({
+          name: 'Some name',
+          topics: [topic],
+          state: sessionState,
+        });
+        expect(() => gameSession.renameTopic('1', 'another name')).toThrow(
+          expect.objectContaining(inputErrors.GAME_SESSION_NOT_IN_LOBBY)
+        );
+      }
+    );
 
     it('throws an input error if the given topic id is not in the game session', () => {
       const topics = [
@@ -266,6 +311,26 @@ describe('GameSession', () => {
     });
   });
 
+  describe('getState', () => {
+    it('returns the given state', () => {
+      const gameSession = makeGameSession({ name: 'Some name', state: GameSessionState.postMatch });
+      expect(gameSession.getState()).toEqual(GameSessionState.postMatch);
+    });
+
+    it('returns `lobby` if initial state was not provided', () => {
+      const gameSession = makeGameSession({ name: 'Some name' });
+      expect(gameSession.getState()).toEqual(GameSessionState.lobby);
+    });
+  });
+
+  describe('setState', () => {
+    it('sets the state', () => {
+      const gameSession = makeGameSession({ name: 'Some name', state: GameSessionState.lobby });
+      gameSession.setState(GameSessionState.preMatch);
+      expect(gameSession.getState()).toEqual(GameSessionState.preMatch);
+    });
+  });
+
   describe('getData', () => {
     it('returns the game session data', () => {
       const topics = [
@@ -277,7 +342,13 @@ describe('GameSession', () => {
         { id: '2', name: 'player 2' },
       ];
 
-      const gameSession = makeGameSession({ hash: '1', name: 'Some name', topics, players });
+      const gameSession = makeGameSession({
+        hash: '1',
+        name: 'Some name',
+        topics,
+        players,
+        state: GameSessionState.postMatch,
+      });
       const data = gameSession.getData();
 
       expect(data).toEqual({
@@ -291,6 +362,7 @@ describe('GameSession', () => {
           { id: '1', name: 'player 1' },
           { id: '2', name: 'player 2' },
         ],
+        state: GameSessionState.postMatch,
       });
     });
   });
