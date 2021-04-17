@@ -1,12 +1,13 @@
 import { IGameSessionRepository } from '../../../repositories';
 import { genericErrors, INPUT_ERROR, VALIDATION_ERROR } from '../../constants';
 import { IGameSession } from '../../entities';
+import { IMakeTopic } from '../../entities/topic';
 import { IFindGameSession } from '../find-game-session';
 
 interface IDependencies {
   gameSessionRepository: IGameSessionRepository;
-  generateId: () => string;
   findGameSession: IFindGameSession;
+  makeTopic: IMakeTopic;
 }
 
 interface IProps {
@@ -20,21 +21,16 @@ export interface IAddTopic {
 
 export const buildAddTopic = ({
   gameSessionRepository,
-  generateId,
   findGameSession,
+  makeTopic,
 }: IDependencies): IAddTopic => {
   const addTopic: IAddTopic = async ({ gameSessionHash, name }) => {
     try {
       const gameSession = await findGameSession({ hash: gameSessionHash });
+      const topic = makeTopic({ name });
+      gameSession.addTopic(topic);
 
-      gameSession.addTopic({ id: generateId(), name });
-
-      await gameSessionRepository.save({
-        hash: gameSession.getHash(),
-        name: gameSession.getName(),
-        topics: gameSession.getTopics(),
-        players: gameSession.getPlayers(),
-      });
+      await gameSessionRepository.save(gameSession.getData());
 
       return gameSession;
     } catch (error) {

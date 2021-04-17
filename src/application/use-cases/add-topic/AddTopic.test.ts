@@ -1,6 +1,7 @@
 import { genericErrors } from '../../constants';
 import { mockWithInputError, mockWithInternalError, mockWithValidationError } from '../../utils';
 import { fakeGameSession } from '../../__mocks__/entities/GameSession.mock';
+import { fakeTopic } from '../../__mocks__/entities/Topic.mock';
 import { gameSessionRepositoryMock } from '../../__mocks__/repositories/GameSession.mock';
 import { buildAddTopic } from './AddTopic';
 
@@ -9,6 +10,7 @@ describe('AddTopic', () => {
     gameSessionRepository: gameSessionRepositoryMock,
     findGameSession: jest.fn(),
     generateId: jest.fn(),
+    makeTopic: jest.fn(),
   };
 
   const addTopic = buildAddTopic(dependencies);
@@ -19,11 +21,8 @@ describe('AddTopic', () => {
     dependencies.gameSessionRepository.save.mockResolvedValue(true);
     dependencies.gameSessionRepository.findByHash.mockResolvedValue('mocked game session');
     dependencies.findGameSession.mockReturnValue(fakeGameSession);
-    fakeGameSession.getHash.mockReturnValue('mocked hash');
-    fakeGameSession.getName.mockReturnValue('mocked name');
-    fakeGameSession.getTopics.mockReturnValue('mocked topics');
-    fakeGameSession.getPlayers.mockReturnValue('mocked players');
-    fakeGameSession.addTopic.mockReturnValue(undefined);
+    dependencies.makeTopic.mockReturnValue(fakeTopic);
+    fakeGameSession.getData.mockReturnValue('mocked data');
   });
 
   it('finds the game session', async () => {
@@ -50,9 +49,21 @@ describe('AddTopic', () => {
     );
   });
 
-  it('adds a topic with the given name to the game session entity', async () => {
+  it('creates a topic with the given name', async () => {
     await addTopic({ gameSessionHash: '1', name: 'some name' });
-    expect(fakeGameSession.addTopic).toBeCalledWith({ id: 'id', name: 'some name' });
+    expect(dependencies.makeTopic).toBeCalledWith({ name: 'some name' });
+  });
+
+  it('throws the caught error if topic throws a validation error when being created', async () => {
+    const validationError = mockWithValidationError(dependencies.makeTopic);
+    await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
+      validationError
+    );
+  });
+
+  it('adds the created topic to the game session entity', async () => {
+    await addTopic({ gameSessionHash: '1', name: 'some name' });
+    expect(fakeGameSession.addTopic).toBeCalledWith(fakeTopic);
   });
 
   it('throws the caught error if game session throws an input error while adding a topic', async () => {
@@ -60,21 +71,9 @@ describe('AddTopic', () => {
     await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(inputError);
   });
 
-  it('throws the caught error if game session throws a validation error while adding a topic', async () => {
-    const validationError = mockWithValidationError(fakeGameSession.addTopic);
-    await expect(addTopic({ gameSessionHash: '1', name: 'some name' })).rejects.toEqual(
-      validationError
-    );
-  });
-
   it('saves the game session entity to the repository', async () => {
     await addTopic({ gameSessionHash: '1', name: 'some name' });
-    expect(dependencies.gameSessionRepository.save).toBeCalledWith({
-      hash: 'mocked hash',
-      name: 'mocked name',
-      topics: 'mocked topics',
-      players: 'mocked players',
-    });
+    expect(dependencies.gameSessionRepository.save).toBeCalledWith('mocked data');
   });
 
   it('throws an internal error if saving to the repository throws', async () => {

@@ -1,4 +1,5 @@
 import { inputErrors, validationErrorKeys, VALIDATION_ERROR } from '../../constants';
+import { makeTopic } from '../topic';
 import { makeGameSession } from './GameSession';
 
 describe('GameSession', () => {
@@ -109,11 +110,13 @@ describe('GameSession', () => {
   describe('getTopics', () => {
     it('returns the given topics', () => {
       const topics = [
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'topic 2' },
+        { id: '1', name: 'topic 1', value: '' },
+        { id: '2', name: 'topic 2', value: '' },
       ];
       const gameSession = makeGameSession({ name: 'Some name', topics });
-      expect(gameSession.getTopics()).toEqual(topics);
+      const returnedTopics = gameSession.getTopics();
+      expect(returnedTopics[0].getName()).toEqual('topic 1');
+      expect(returnedTopics[1].getName()).toEqual('topic 2');
     });
 
     it('returns an empty array if no topics were given', () => {
@@ -124,40 +127,16 @@ describe('GameSession', () => {
 
   describe('addTopic', () => {
     it('adds a topic to the game session', () => {
-      const topic = { id: '1', name: 'topic' };
+      const topic = makeTopic({ id: '1', name: 'topic' });
       const gameSession = makeGameSession({ name: 'Some name' });
       gameSession.addTopic(topic);
       expect(gameSession.getTopics()).toEqual([topic]);
     });
 
-    it('throws a validation error if the given name is shorter than 2 characters', () => {
-      const topic = { id: '1', name: 'a' };
-      const gameSession = makeGameSession({ name: 'Some name' });
-      expect(() => gameSession.addTopic(topic)).toThrow(
-        expect.objectContaining({
-          type: VALIDATION_ERROR,
-          errorKey: validationErrorKeys.STRING_TOO_SHORT,
-          message: 'Topic name is too short (minimum is 2 characters)',
-        })
-      );
-    });
-
-    it('throws a validation error if the given name is bigger than 30 characters', () => {
-      const topic = { id: '1', name: 'An incredibly long name with lots of characters' };
-      const gameSession = makeGameSession({ name: 'Some name' });
-      expect(() => gameSession.addTopic(topic)).toThrow(
-        expect.objectContaining({
-          type: VALIDATION_ERROR,
-          errorKey: validationErrorKeys.STRING_TOO_LONG,
-          message: 'Topic name is too long (maximum is 30 characters)',
-        })
-      );
-    });
-
     it('throws an input error if the given topic id is already in the game session', () => {
-      const topic = { id: '1', name: 'some name' };
+      const topic = { id: '1', name: 'some name', value: '' };
       const gameSession = makeGameSession({ name: 'Some name', topics: [topic] });
-      expect(() => gameSession.addTopic(topic)).toThrow(
+      expect(() => gameSession.addTopic(makeTopic(topic))).toThrow(
         expect.objectContaining(inputErrors.TOPIC_ALREADY_IN_GAME_SESSION)
       );
     });
@@ -165,19 +144,18 @@ describe('GameSession', () => {
 
   describe('removeTopic', () => {
     it('removes a topic from the game session', () => {
-      const topics = [
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'topic 2' },
-      ];
+      const topic1 = { id: '1', name: 'topic 1', value: '' };
+      const topic2 = { id: '2', name: 'topic 2', value: '' };
+      const topics = [topic1, topic2];
       const gameSession = makeGameSession({ name: 'Some name', topics });
       gameSession.removeTopic('1');
-      expect(gameSession.getTopics()).toEqual([{ id: '2', name: 'topic 2' }]);
+      expect(gameSession.getTopics()[0].getName()).toEqual('topic 2');
     });
 
     it('throws an input error if the given topic id is not in the game session', () => {
       const topics = [
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'topic 2' },
+        { id: '1', name: 'topic 1', value: '' },
+        { id: '2', name: 'topic 2', value: '' },
       ];
       const gameSession = makeGameSession({ name: 'Some name', topics });
       expect(() => gameSession.removeTopic('3')).toThrow(
@@ -188,52 +166,18 @@ describe('GameSession', () => {
 
   describe('renameTopic', () => {
     it('renames a topic from the game session', () => {
-      const topics = [
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'topic 2' },
-      ];
+      const topic1 = { id: '1', name: 'topic 1', value: '' };
+      const topic2 = { id: '2', name: 'topic 2', value: '' };
+      const topics = [topic1, topic2];
       const gameSession = makeGameSession({ name: 'Some name', topics });
       gameSession.renameTopic('2', 'another name');
-      expect(gameSession.getTopics()).toEqual([
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'another name' },
-      ]);
-    });
-
-    it('throws a validation error if the given name is shorter than 2 characters', () => {
-      const topics = [
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'topic 2' },
-      ];
-      const gameSession = makeGameSession({ name: 'Some name', topics });
-      expect(() => gameSession.renameTopic('4', 'a')).toThrow(
-        expect.objectContaining({
-          type: VALIDATION_ERROR,
-          errorKey: validationErrorKeys.STRING_TOO_SHORT,
-          message: 'Topic name is too short (minimum is 2 characters)',
-        })
-      );
-    });
-
-    it('throws a validation error if the given name is bigger than 30 characters', () => {
-      const topics = [
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'topic 2' },
-      ];
-      const gameSession = makeGameSession({ name: 'Some name', topics });
-      expect(() => gameSession.renameTopic('4', 'another really gigantic big name')).toThrow(
-        expect.objectContaining({
-          type: VALIDATION_ERROR,
-          errorKey: validationErrorKeys.STRING_TOO_LONG,
-          message: 'Topic name is too long (maximum is 30 characters)',
-        })
-      );
+      expect(gameSession.getTopics()[1].getName()).toEqual('another name');
     });
 
     it('throws an input error if the given topic id is not in the game session', () => {
       const topics = [
-        { id: '1', name: 'topic 1' },
-        { id: '2', name: 'topic 2' },
+        { id: '1', name: 'topic 1', value: '' },
+        { id: '2', name: 'topic 2', value: '' },
       ];
       const gameSession = makeGameSession({ name: 'Some name', topics });
       expect(() => gameSession.renameTopic('4', 'another name')).toThrow(
@@ -319,6 +263,35 @@ describe('GameSession', () => {
       expect(() => gameSession.removePlayer('3')).toThrow(
         expect.objectContaining(inputErrors.PLAYER_NOT_FOUND)
       );
+    });
+  });
+
+  describe('getData', () => {
+    it('returns the game session data', () => {
+      const topics = [
+        { id: '1', name: 'topic 1', value: '' },
+        { id: '2', name: 'topic 2', value: '' },
+      ];
+      const players = [
+        { id: '1', name: 'player 1' },
+        { id: '2', name: 'player 2' },
+      ];
+
+      const gameSession = makeGameSession({ hash: '1', name: 'Some name', topics, players });
+      const data = gameSession.getData();
+
+      expect(data).toEqual({
+        hash: '1',
+        name: 'Some name',
+        topics: [
+          { id: '1', name: 'topic 1', value: '' },
+          { id: '2', name: 'topic 2', value: '' },
+        ],
+        players: [
+          { id: '1', name: 'player 1' },
+          { id: '2', name: 'player 2' },
+        ],
+      });
     });
   });
 });

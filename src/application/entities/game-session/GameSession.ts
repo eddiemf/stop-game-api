@@ -1,12 +1,12 @@
 import cuid from 'cuid';
+import {
+  IGameSessionData,
+  ITopicData,
+} from '../../../repositories/game-session/GameSession.repository';
 import { inputErrors } from '../../constants';
 import { validate } from '../../core';
-import { appendToList, insertToList, removeFromList } from '../../utils';
-
-interface ITopic {
-  id: string;
-  name: string;
-}
+import { appendToList, removeFromList } from '../../utils';
+import { ITopic, makeTopic } from '../topic';
 
 interface IPlayer {
   id: string;
@@ -16,7 +16,7 @@ interface IPlayer {
 interface IGameSessionProps {
   hash?: string;
   name: string;
-  topics?: ITopic[];
+  topics?: ITopicData[];
   players?: IPlayer[];
 }
 
@@ -31,6 +31,7 @@ export interface IGameSession {
   getPlayers: () => IPlayer[];
   addPlayer: (player: IPlayer) => void;
   removePlayer: (playerId: string) => void;
+  getData: () => IGameSessionData;
 }
 
 export interface IMakeGameSession {
@@ -54,6 +55,8 @@ export const makeGameSession: IMakeGameSession = ({
   const error = validate({ hash, name }, validationConstraints);
   if (error) throw error;
 
+  let _topics = topics.map((topic) => makeTopic(topic));
+
   const getHash = () => hash;
   const getName = () => name;
 
@@ -64,34 +67,27 @@ export const makeGameSession: IMakeGameSession = ({
     name = newName;
   };
 
-  const getTopics = () => topics;
-  const addTopic = (topic: ITopic) => {
-    const error = validate({ topicName: topic.name }, validationConstraints);
-    if (error) throw error;
+  const getTopics = () => _topics;
 
-    if (topics.find(({ id }) => topic.id === id)) throw inputErrors.TOPIC_ALREADY_IN_GAME_SESSION;
+  const addTopic = (newTopic: ITopic) => {
+    if (_topics.find((topic) => newTopic.getId() === topic.getId()))
+      throw inputErrors.TOPIC_ALREADY_IN_GAME_SESSION;
 
-    topics = appendToList(topics, topic);
+    _topics = appendToList(_topics, newTopic);
   };
 
   const removeTopic = (topicId: string) => {
-    const topicIndex = topics.findIndex(({ id }) => id === topicId);
+    const topicIndex = _topics.findIndex((topic) => topic.getId() === topicId);
     if (topicIndex === -1) throw inputErrors.TOPIC_NOT_FOUND;
 
-    topics = removeFromList(topics, topicIndex);
+    _topics = removeFromList(_topics, topicIndex);
   };
 
   const renameTopic = (topicId: string, newName: string) => {
-    const error = validate({ topicName: newName }, validationConstraints);
-    if (error) throw error;
-
-    const topic = topics.find(({ id }) => id === topicId);
+    const topic = _topics.find((topic) => topic.getId() === topicId);
     if (!topic) throw inputErrors.TOPIC_NOT_FOUND;
 
-    const topicIndex = topics.findIndex(({ id }) => id === topicId);
-    const newTopic = { ...topic, name: newName };
-    removeTopic(topicId);
-    topics = insertToList(topics, newTopic, topicIndex);
+    topic.setName(newName);
   };
 
   const getPlayers = () => players;
@@ -113,6 +109,13 @@ export const makeGameSession: IMakeGameSession = ({
     players = removeFromList(players, playerIndex);
   };
 
+  const getData = () => ({
+    hash: getHash(),
+    name: getName(),
+    topics: getTopics().map((topic) => topic.getData()),
+    players: getPlayers(),
+  });
+
   return {
     getHash,
     getName,
@@ -124,5 +127,6 @@ export const makeGameSession: IMakeGameSession = ({
     getPlayers,
     addPlayer,
     removePlayer,
+    getData,
   };
 };

@@ -1,14 +1,15 @@
-interface ITopicData {
+export interface ITopicData {
+  id: string;
+  name: string;
+  value: string;
+}
+
+export interface IPlayerData {
   id: string;
   name: string;
 }
 
-interface IPlayerData {
-  id: string;
-  name: string;
-}
-
-interface IGameSessionData {
+export interface IGameSessionData {
   hash: string;
   name: string;
   topics: ITopicData[];

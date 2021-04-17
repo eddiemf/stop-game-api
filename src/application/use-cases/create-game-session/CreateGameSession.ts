@@ -23,12 +23,7 @@ export const buildCreateGameSession = ({
     try {
       const gameSession = makeGameSession({ name });
 
-      await gameSessionRepository.save({
-        hash: gameSession.getHash(),
-        name: gameSession.getName(),
-        topics: gameSession.getTopics(),
-        players: gameSession.getPlayers(),
-      });
+      await gameSessionRepository.save(gameSession.getData());
 
       return gameSession;
     } catch (error) {

@@ -9,4 +9,5 @@ export const fakeGameSession = {
   getPlayers: jest.fn(),
   addPlayer: jest.fn(),
   removePlayer: jest.fn(),
+  getData: jest.fn(),
 };

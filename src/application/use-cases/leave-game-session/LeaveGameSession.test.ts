@@ -16,11 +16,7 @@ describe('LeaveGameSession', () => {
     dependencies.gameSessionRepository.findByHash.mockResolvedValue('mocked game session');
     dependencies.gameSessionRepository.save.mockResolvedValue(undefined);
     dependencies.findGameSession.mockReturnValue(fakeGameSession);
-    fakeGameSession.getHash.mockReturnValue('mocked hash');
-    fakeGameSession.getName.mockReturnValue('mocked name');
-    fakeGameSession.getPlayers.mockReturnValue('mocked players');
-    fakeGameSession.getTopics.mockReturnValue('mocked topics');
-    fakeGameSession.removePlayer.mockReturnValue(undefined);
+    fakeGameSession.getData.mockReturnValue('mocked data');
   });
 
   it('finds the game session with the given hash', async () => {
@@ -56,12 +52,7 @@ describe('LeaveGameSession', () => {
 
   it('saves the game session entity in the game session repository', async () => {
     await leaveGameSession({ hash: 'some hash', playerId: 'id' });
-    expect(dependencies.gameSessionRepository.save).toBeCalledWith({
-      hash: 'mocked hash',
-      name: 'mocked name',
-      players: 'mocked players',
-      topics: 'mocked topics',
-    });
+    expect(dependencies.gameSessionRepository.save).toBeCalledWith('mocked data');
   });
 
   it('throws an internal error if saving game session entity throws', async () => {

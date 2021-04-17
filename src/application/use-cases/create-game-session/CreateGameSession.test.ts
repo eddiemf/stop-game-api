@@ -14,10 +14,7 @@ describe('CreateGameSession', () => {
     jest.clearAllMocks();
     dependencies.gameSessionRepository.save.mockResolvedValue(undefined);
     dependencies.makeGameSession.mockReturnValue(fakeGameSession);
-    fakeGameSession.getHash.mockReturnValue('mocked hash');
-    fakeGameSession.getName.mockReturnValue('mocked name');
-    fakeGameSession.getTopics.mockReturnValue('mocked topics');
-    fakeGameSession.getPlayers.mockReturnValue('mocked players');
+    fakeGameSession.getData.mockReturnValue('mocked data');
   });
 
   it('creates a game session entity with the given name', async () => {
@@ -27,12 +24,7 @@ describe('CreateGameSession', () => {
 
   it('saves the created game session entity in the game session repository', async () => {
     await createGameSession({ name: 'Some name' });
-    expect(dependencies.gameSessionRepository.save).toBeCalledWith({
-      hash: 'mocked hash',
-      name: 'mocked name',
-      topics: 'mocked topics',
-      players: 'mocked players',
-    });
+    expect(dependencies.gameSessionRepository.save).toBeCalledWith('mocked data');
   });
 
   it('throws the received error if game session creation throws a validation error', async () => {

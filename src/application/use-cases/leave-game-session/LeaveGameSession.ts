@@ -26,12 +26,7 @@ export const buildLeaveGameSession = ({
       const gameSession = await findGameSession({ hash });
       gameSession.removePlayer(playerId);
 
-      await gameSessionRepository.save({
-        hash: gameSession.getHash(),
-        name: gameSession.getName(),
-        topics: gameSession.getTopics(),
-        players: gameSession.getPlayers(),
-      });
+      await gameSessionRepository.save(gameSession.getData());
 
       return gameSession;
     } catch (error) {

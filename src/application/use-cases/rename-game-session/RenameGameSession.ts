@@ -26,12 +26,7 @@ export const buildRenameGameSession = ({
       const gameSession = await findGameSession({ hash: gameSessionHash });
       gameSession.rename(name);
 
-      await gameSessionRepository.save({
-        hash: gameSession.getHash(),
-        name: gameSession.getName(),
-        topics: gameSession.getTopics(),
-        players: gameSession.getPlayers(),
-      });
+      await gameSessionRepository.save(gameSession.getData());
 
       return gameSession;
     } catch (error) {

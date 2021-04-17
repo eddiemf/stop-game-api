@@ -17,11 +17,7 @@ describe('RenameGameSession', () => {
     dependencies.gameSessionRepository.save.mockResolvedValue(true);
     dependencies.gameSessionRepository.findByHash.mockResolvedValue('mocked game session');
     dependencies.findGameSession.mockReturnValue(fakeGameSession);
-    fakeGameSession.getHash.mockReturnValue('mocked hash');
-    fakeGameSession.getName.mockReturnValue('mocked name');
-    fakeGameSession.getTopics.mockReturnValue('mocked topics');
-    fakeGameSession.getPlayers.mockReturnValue('mocked players');
-    fakeGameSession.rename.mockReturnValue(undefined);
+    fakeGameSession.getData.mockReturnValue('mocked data');
   });
 
   it('finds the game session with the given hash', async () => {
@@ -64,12 +60,7 @@ describe('RenameGameSession', () => {
 
   it('saves the game session entity to the repository', async () => {
     await renameGameSession({ gameSessionHash: '1', name: 'some name' });
-    expect(dependencies.gameSessionRepository.save).toBeCalledWith({
-      hash: 'mocked hash',
-      name: 'mocked name',
-      topics: 'mocked topics',
-      players: 'mocked players',
-    });
+    expect(dependencies.gameSessionRepository.save).toBeCalledWith('mocked data');
   });
 
   it('throws an internal error if saving to the repository throws', async () => {
