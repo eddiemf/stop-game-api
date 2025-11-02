@@ -1,4 +1,6 @@
-export type Result<T, E> = { isOk: true; data: T } | { isOk: false; error: E };
+export type Result<T, E> = SuccessResult<T> | ErrorResult<E>;
+export type SuccessResult<T> = { isOk: true; data: T };
+export type ErrorResult<E> = { isOk: false; error: E };
 
 export type PromiseResult<T, E> = Promise<Result<T, E>>;
 

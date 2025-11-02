@@ -1,5 +1,5 @@
 import { Player } from '@app/domain';
-import type { PlayerDTO } from '@app/dtos';
+import type { PlayerDTO } from '@app/ports/dtos';
 
 export class PlayerMapper {
   // public static toPersistence(player: IPlayerEntity): IPlayerData {

@@ -1,33 +1,38 @@
-import type { GameSessionDTO } from '@app/dtos';
+import type { GameSessionDTO } from '@app/ports/dtos';
 import type { CreateGameSession } from '@app/use-cases';
-import type { Request, Response } from 'express';
+import { Fail, Ok } from '@shared/result';
+import { Controller, type ControllerRequest, type ControllerResponse } from '../controller';
 
-type CreateGameSessionResponse = Response<
-  { gameSession: GameSessionDTO } | { error: string; code: string }
->;
+export class GameChannelController extends Controller {
+  constructor(private createGameSession: CreateGameSession) {
+    super();
+  }
 
-export class GameChannelController {
-  constructor(private createGameSession: CreateGameSession) {}
+  public async create({ body }: ControllerRequest): ControllerResponse<GameSessionDTO> {
+    try {
+      const { name } = body;
 
-  public async create({ body }: Request, res: CreateGameSessionResponse): Promise<void> {
-    const { name } = body;
+      if (!name || typeof name !== 'string') {
+        return Fail({
+          status: 400,
+          error: this.mapValidationError('name', 'Name must be a string.'),
+        });
+      }
 
-    const gameSessionResult = await this.createGameSession.execute({ name });
+      const gameSessionResult = await this.createGameSession.execute({ name });
 
-    if (gameSessionResult.isOk) {
-      res.status(200).json({ gameSession: gameSessionResult.data });
-      return;
+      if (!gameSessionResult.isOk) {
+        const error = this.mapErrorFromResult(gameSessionResult);
+
+        if (error.code === 'ValidationError') return Fail({ status: 400, error });
+
+        return Fail({ status: 500, error });
+      }
+
+      return Ok({ status: 200, data: gameSessionResult.data });
+    } catch (_) {
+      return Fail({ status: 500, error: this.getInternalServerError() });
     }
-
-    const { message, code } = gameSessionResult.error;
-
-    if (code === 'ValidationError') {
-      res.status(400).json({ error: message, code });
-    } else {
-      res.status(500).json({ error: message, code });
-    }
-
-    // GameConnection.createGameChannel(gameSession.id);
   }
 
   // public static async join({ params, query }: AppRequest) {

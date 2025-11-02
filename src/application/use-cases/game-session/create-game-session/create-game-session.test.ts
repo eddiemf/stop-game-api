@@ -1,15 +1,23 @@
 import { DatabaseError, type GameSessionRepository } from '@app/domain';
+import { GameSessionMapper } from '@app/mappers';
+import type { GameSessionService } from '@app/ports/services';
 import { Fail, Ok } from '@shared/result';
 import { afterEach, beforeEach, describe, expect, it, vitest } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { CreateGameSession } from './create-game-session';
 
+vitest.mock('@app/mappers/game-session-mapper');
+
 describe('CreateGameSession', () => {
   const gameSessionRepository = mock<GameSessionRepository>();
-  const useCase = new CreateGameSession(gameSessionRepository);
+  const gameSessionService = mock<GameSessionService>();
+  const gameSessionMapper = vitest.mocked(GameSessionMapper);
+  const useCase = new CreateGameSession(gameSessionRepository, gameSessionService);
 
   beforeEach(() => {
     gameSessionRepository.save.mockResolvedValue(Ok(undefined));
+    // @ts-expect-error
+    gameSessionMapper.toDTO.mockReturnValue('mocked game session');
   });
 
   afterEach(() => {
@@ -33,15 +41,11 @@ describe('CreateGameSession', () => {
     expect(gameSessionRepository.save).toHaveBeenCalled();
   });
 
-  // it('creates a game session with the given name and connected player', async () => {
-  //   const result = await useCase.execute({ name: 'Some name',  });
-  //   if (!result.isOk) throw 'Expected result to be Ok';
+  it('creates the session and returns the game session DTO', async () => {
+    const result = await useCase.execute({ name: 'Some name' });
+    if (!result.isOk) throw 'Expected result to be Ok';
 
-  //   const gameSession = result.data;
-
-  //   expect(gameSession.getName()).toEqual('Some name');
-  //   expect(gameSession.getPlayers()[0].getName()).toEqual('Player');
-  //   expect(gameSession.getPlayers()[0].getIsConnected()).toEqual(true);
-  //   expect(gameSessionRepository.save).toHaveBeenCalledWith(gameSession);
-  // });
+    expect(result.data).toEqual('mocked game session');
+    expect(gameSessionService.createSession).toHaveBeenCalledWith('some-id');
+  });
 });

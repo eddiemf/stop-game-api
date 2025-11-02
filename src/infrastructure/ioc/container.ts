@@ -1,6 +1,6 @@
 import { CreateGameSession } from '@app/use-cases';
-import { GameChannelController } from '../controllers';
-import { GameSessionInMemoryRepository } from '../repositories';
+import { GameSessionInMemoryRepository } from '../adapters/repositories';
+import { GameChannelController } from '../server/controllers';
 
 export interface IocContainer {
   gameChannelController: GameChannelController;

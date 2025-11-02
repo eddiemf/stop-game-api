@@ -1,1 +1,1 @@
-export * from './RenameTopic';
+export * from './rename-topic';

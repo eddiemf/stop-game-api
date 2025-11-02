@@ -1,5 +1,5 @@
 import { GameSession } from '@app/domain';
-import type { GameSessionDTO } from '@app/dtos';
+import type { GameSessionDTO } from '@app/ports/dtos';
 import { GameTopicMapper } from './game-topic-mapper';
 import { PlayerMapper } from './player-mapper';
 

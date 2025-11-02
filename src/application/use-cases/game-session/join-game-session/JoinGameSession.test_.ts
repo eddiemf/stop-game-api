@@ -10,7 +10,7 @@ import { getMockedGameSession } from '../../../__mocks__/entities/GameSession.mo
 import { getMockedGameSessionRepository } from '../../../__mocks__/repositories/GameSessionRepository.mock';
 import { PLAYER_JOINED_EVENT } from '../../../message-bus';
 import { FindGameSession } from '../find-game-session';
-import { JoinGameSession } from './JoinGameSession';
+import { JoinGameSession } from './join-game-session';
 
 jest.mock('pubsub-js');
 jest.mock('../find-game-session');

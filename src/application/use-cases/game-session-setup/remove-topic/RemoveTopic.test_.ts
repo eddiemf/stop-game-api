@@ -10,7 +10,7 @@ import { getMockedGameSession } from '../../../__mocks__/entities/GameSession.mo
 import { getMockedGameSessionRepository } from '../../../__mocks__/repositories/GameSessionRepository.mock';
 import { TOPIC_REMOVED_EVENT } from '../../../message-bus';
 import { FindGameSession } from '../find-game-session';
-import { RemoveTopic } from './RemoveTopic';
+import { RemoveTopic } from './remove-topic';
 
 jest.mock('pubsub-js');
 jest.mock('../find-game-session');

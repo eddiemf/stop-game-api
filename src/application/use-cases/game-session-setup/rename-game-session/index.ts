@@ -1,1 +1,1 @@
-export * from './RenameGameSession';
+export * from './rename-game-session';

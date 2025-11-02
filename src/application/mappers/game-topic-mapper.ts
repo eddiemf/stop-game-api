@@ -1,5 +1,5 @@
 import { GameTopic } from '@app/domain';
-import type { GameTopicDTO } from '@app/dtos';
+import type { GameTopicDTO } from '@app/ports/dtos';
 
 export class GameTopicMapper {
   // public static toPersistence(topic: IGameTopicEntity): IGameTopicData {

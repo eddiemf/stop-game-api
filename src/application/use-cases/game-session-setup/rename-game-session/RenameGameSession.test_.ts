@@ -3,7 +3,7 @@ import { Error, Ok } from '../../../shared/result';
 import { getMockedGameSession } from '../../__mocks__/entities/GameSession.mock';
 import { getMockedGameSessionRepository } from '../../__mocks__/repositories/GameSessionRepository.mock';
 import { FindGameSessionMock } from '../../__mocks__/use-cases/FindGameSession.mock';
-import { RenameGameSession } from './RenameGameSession';
+import { RenameGameSession } from './rename-game-session';
 
 describe('RenameGameSession', () => {
   const gameSessionRepository = getMockedGameSessionRepository();

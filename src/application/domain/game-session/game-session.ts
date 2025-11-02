@@ -64,13 +64,13 @@ export class GameSession {
     };
   }
 
-  public rename(newName: string): Result<void, ValidationError> {
+  public rename(newName: string): Result<GameSession, ValidationError> {
     const nameResult = GameSession.validateName(newName);
     if (!nameResult.isOk) return Fail(nameResult.error);
 
     this.name = newName;
 
-    return Ok(undefined);
+    return Ok(this);
   }
 
   public addTopic(
@@ -89,22 +89,23 @@ export class GameSession {
 
   public removeTopic(
     topicId: string
-  ): Result<void, GameSessionNotInLobbyError | TopicNotFoundError> {
+  ): Result<GameTopic, GameSessionNotInLobbyError | TopicNotFoundError> {
     if (this.state !== GameSessionState.lobby)
       return Fail(new GameSessionNotInLobbyError('Could not remove topic'));
 
     const topicIndex = this.topics.findIndex((topic) => topic.getId() === topicId);
     if (topicIndex === -1) return Fail(new TopicNotFoundError('Could not remove topic'));
 
+    const topic = this.topics[topicIndex];
     this.topics = this.topics.filter((topic) => topic.getId() !== topicId);
 
-    return Ok(undefined);
+    return Ok(topic);
   }
 
   public renameTopic(
     topicId: string,
     newName: string
-  ): Result<void, GameSessionNotInLobbyError | TopicNotFoundError | ValidationError> {
+  ): Result<GameTopic, GameSessionNotInLobbyError | TopicNotFoundError | ValidationError> {
     if (this.state !== GameSessionState.lobby)
       return Fail(new GameSessionNotInLobbyError('Could not rename topic'));
 
@@ -114,7 +115,7 @@ export class GameSession {
     const result = topic.setName(newName);
     if (!result.isOk) return Fail(result.error);
 
-    return Ok(undefined);
+    return Ok(topic);
   }
 
   public addPlayer(newPlayer: Player): Result<void, PlayerAlreadyInGameSessionError> {
@@ -142,13 +143,13 @@ export class GameSession {
     return Ok(undefined);
   }
 
-  public disconnectPlayer(playerId: string): Result<void, PlayerNotInSessionError> {
+  public disconnectPlayer(playerId: string): Result<Player, PlayerNotInSessionError> {
     const player = this.players.find((player) => player.getId() === playerId);
     if (!player) return Fail(new PlayerNotInSessionError('Could not disconnect player'));
 
     player.setConnected(false);
 
-    return Ok(undefined);
+    return Ok(player);
   }
 
   public setState(newState: GameSessionState) {

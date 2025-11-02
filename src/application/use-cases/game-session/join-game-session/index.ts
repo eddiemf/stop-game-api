@@ -1,1 +1,1 @@
-export * from './JoinGameSession';
+export * from './join-game-session';

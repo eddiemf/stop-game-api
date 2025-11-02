@@ -1,1 +1,1 @@
-export * from './RemoveTopic';
+export * from './remove-topic';

@@ -1,5 +1,7 @@
+import { createServer } from 'node:http';
 import express from 'express';
-import type { IocContainer } from '../ioc';
+import type { IocContainer } from '../../ioc';
+import { GameSessionRouter } from './routes';
 
 export function createHttpServer(container: IocContainer) {
   const app = express();
@@ -8,11 +10,11 @@ export function createHttpServer(container: IocContainer) {
 
   app.get('/healthcheck', (_, res) => res.send('I am alive :)'));
 
-  app.post('/game-session', (req, res) => container.gameChannelController.create(req, res));
+  new GameSessionRouter(app, container);
   // app.get('/game-session/:sessionId/join', joinSession);
   // app.post('/game-session/:sessionId/topics', addTopic);
   // app.delete('/game-session/:sessionId/topics/:topicId', removeTopic);
   // app.put('/game-session/:sessionId/topics/:topicId', renameTopic);
 
-  return app;
+  return createServer(app);
 }

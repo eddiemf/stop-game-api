@@ -9,7 +9,7 @@ import { getMockedGameSession } from '../../../__mocks__/entities/GameSession.mo
 import { getMockedGameSessionRepository } from '../../../__mocks__/repositories/GameSessionRepository.mock';
 import { PLAYER_DISCONNECTED_EVENT } from '../../../message-bus';
 import { FindGameSession } from '../find-game-session';
-import { LeaveGameSession } from './LeaveGameSession';
+import { LeaveGameSession } from './leave-game-session';
 
 jest.mock('pubsub-js');
 jest.mock('../find-game-session');

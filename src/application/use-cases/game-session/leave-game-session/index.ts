@@ -1,1 +1,1 @@
-export * from './LeaveGameSession';
+export * from './leave-game-session';

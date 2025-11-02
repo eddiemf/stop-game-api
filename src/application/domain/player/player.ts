@@ -4,6 +4,7 @@ import { ValidationError } from '../errors/validation-error';
 
 interface Props {
   id?: string;
+  userId: string;
   name: string;
   isConnected?: boolean;
 }
@@ -11,12 +12,17 @@ interface Props {
 export class Player {
   private constructor(
     private id: string,
+    private userId: string,
     private name: string,
     private isConnected: boolean
   ) {}
 
   public getId(): string {
     return this.id;
+  }
+
+  public getUserId(): string {
+    return this.userId;
   }
 
   public getName(): string {
@@ -30,6 +36,7 @@ export class Player {
   public getProps(): Props {
     return {
       id: this.id,
+      userId: this.userId,
       name: this.name,
       isConnected: this.isConnected,
     };
@@ -50,13 +57,14 @@ export class Player {
 
   static create({
     id = Id.createID(),
+    userId,
     name,
     isConnected = true,
   }: Props): Result<Player, ValidationError> {
     const nameResult = Player.validateName(name);
     if (!nameResult.isOk) return Fail(nameResult.error);
 
-    return Ok(new Player(id, name, isConnected));
+    return Ok(new Player(id, userId, name, isConnected));
   }
 
   private static validateName(name: string): Result<string, ValidationError> {

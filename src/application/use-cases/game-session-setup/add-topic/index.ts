@@ -1,1 +1,1 @@
-export * from './AddTopic';
+export * from './add-topic';

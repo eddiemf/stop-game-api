@@ -1,7 +1,8 @@
-import { createHttpServer, createIocContainer } from './infrastructure';
+import { createHttpServer, createIocContainer, createWebSocketServer } from './infrastructure';
 
 const PORT = process.env.PORT || 3000;
 const iocContainer = createIocContainer();
-const app = createHttpServer(iocContainer);
+const httpServer = createHttpServer(iocContainer);
+createWebSocketServer(httpServer, iocContainer);
 
-app.listen(PORT, () => console.log(`Running server on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`Running server on port ${PORT}`));

@@ -1,7 +1,14 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
-  "include": ["./src/index.ts", "./src/**/*.test.ts"],
-  "exclude": ["node_modules", "dist"],
+  "include": [
+    "src"
+    // "./src/index.ts",
+    // "./src/**/*.test.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
   "compilerOptions": {
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
@@ -12,10 +19,21 @@
     "noImplicitAny": true,
     "noEmit": true,
     "paths": {
-      "@app/*": ["./src/application/*"],
-      "@shared/*": ["./src/shared/*"],
-      "@config/*": ["./src/config/*"],
-      "@__utils__/*": ["./src/__utils__/*"]
+      "@app/*": [
+        "./src/application/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ],
+      "@config/*": [
+        "./src/config/*"
+      ],
+      "@infrastructure/*": [
+        "./src/infrastructure/*"
+      ],
+      "@__utils__/*": [
+        "./src/__utils__/*"
+      ]
     }
   },
   "ts-node": {
