@@ -3,6 +3,7 @@ import {
   type DatabaseError,
   GameSessionNotFoundError,
   type GameSessionRepository,
+  type UserNotInGameSessionError,
   type ValidationError,
 } from '@app/domain';
 import { GameSessionRenamedEvent } from '@app/dtos/events';
@@ -12,6 +13,7 @@ import { Fail, Ok, type PromiseResult } from '@shared/result';
 
 interface Input {
   gameSessionId: string;
+  userId: string;
   name: string;
 }
 
@@ -24,9 +26,14 @@ export class RenameGameSession {
   async execute({
     gameSessionId,
     name,
+    userId,
   }: Input): PromiseResult<
     void,
-    DatabaseError | GameSessionNotFoundError | ValidationError | BroadcastToGameSessionError
+    | DatabaseError
+    | UserNotInGameSessionError
+    | GameSessionNotFoundError
+    | ValidationError
+    | BroadcastToGameSessionError
   > {
     const gameSessionResult = await this.gameSessionRepository.findById(gameSessionId);
     if (!gameSessionResult.isOk) return Fail(gameSessionResult.error);
@@ -34,7 +41,7 @@ export class RenameGameSession {
     const gameSession = gameSessionResult.data;
     if (!gameSession) return Fail(new GameSessionNotFoundError('Failed to rename game session'));
 
-    const renameResult = gameSession.rename(name);
+    const renameResult = gameSession.rename(name, userId);
     if (!renameResult.isOk) return Fail(renameResult.error);
 
     const saveResult = await this.gameSessionRepository.save(gameSession);

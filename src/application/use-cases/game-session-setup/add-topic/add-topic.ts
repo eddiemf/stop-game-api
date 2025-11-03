@@ -6,6 +6,7 @@ import {
   type GameSessionRepository,
   GameTopic,
   type TopicAlreadyInGameSessionError,
+  type UserNotInGameSessionError,
   type ValidationError,
 } from '@app/domain';
 import { TopicAddedEvent } from '@app/dtos';
@@ -15,6 +16,7 @@ import { Fail, Ok, type PromiseResult } from '@shared/result';
 
 interface Input {
   sessionId: string;
+  userId: string;
   name: string;
 }
 
@@ -26,12 +28,14 @@ export class AddTopic {
 
   async execute({
     sessionId,
+    userId,
     name,
   }: Input): Promise<
     PromiseResult<
       GameSession,
       | ValidationError
       | DatabaseError
+      | UserNotInGameSessionError
       | GameSessionNotFoundError
       | GameSessionNotInLobbyError
       | TopicAlreadyInGameSessionError
@@ -48,7 +52,7 @@ export class AddTopic {
     const gameSession = gameSessionResult.data;
     if (!gameSession) return Fail(new GameSessionNotFoundError('Failed to add topic'));
 
-    const addTopicResult = gameSession.addTopic(topic);
+    const addTopicResult = gameSession.addTopic(topic, userId);
     if (!addTopicResult.isOk) return Fail(addTopicResult.error);
 
     const saveResult = await this.gameSessionRepository.save(gameSession);

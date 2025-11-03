@@ -5,6 +5,7 @@ import {
   type GameSessionNotInLobbyError,
   type GameSessionRepository,
   type TopicNotFoundError,
+  type UserNotInGameSessionError,
 } from '@app/domain';
 import { TopicRemovedEvent } from '@app/dtos/events';
 import { GameSessionMapper, GameTopicMapper } from '@app/mappers';
@@ -14,6 +15,7 @@ import { Fail, Ok, type PromiseResult } from '@shared/result';
 interface Input {
   sessionId: string;
   topicId: string;
+  userId: string;
 }
 
 export class RemoveTopic {
@@ -25,10 +27,12 @@ export class RemoveTopic {
   async execute({
     sessionId,
     topicId,
+    userId,
   }: Input): Promise<
     PromiseResult<
       void,
       | DatabaseError
+      | UserNotInGameSessionError
       | GameSessionNotFoundError
       | GameSessionNotInLobbyError
       | TopicNotFoundError
@@ -41,7 +45,7 @@ export class RemoveTopic {
     const gameSession = gameSessionResult.data;
     if (!gameSession) return Fail(new GameSessionNotFoundError('Failed to remove topic'));
 
-    const removeResult = gameSession.removeTopic(topicId);
+    const removeResult = gameSession.removeTopic(topicId, userId);
     if (!removeResult.isOk) return Fail(removeResult.error);
 
     const saveResult = await this.gameSessionRepository.save(gameSession);

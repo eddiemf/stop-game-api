@@ -5,6 +5,7 @@ import {
   type GameSessionNotInLobbyError,
   type GameSessionRepository,
   type TopicNotFoundError,
+  type UserNotInGameSessionError,
   type ValidationError,
 } from '@app/domain';
 import { TopicRenamedEvent } from '@app/dtos';
@@ -14,6 +15,7 @@ import { Fail, Ok, type PromiseResult } from '@shared/result';
 
 interface Input {
   sessionId: string;
+  userId: string;
   topicId: string;
   name: string;
 }
@@ -26,6 +28,7 @@ export class RenameTopic {
 
   async execute({
     sessionId,
+    userId,
     topicId,
     name,
   }: Input): Promise<
@@ -33,6 +36,7 @@ export class RenameTopic {
       void,
       | DatabaseError
       | GameSessionNotFoundError
+      | UserNotInGameSessionError
       | GameSessionNotInLobbyError
       | TopicNotFoundError
       | ValidationError
@@ -45,7 +49,7 @@ export class RenameTopic {
     const gameSession = gameSessionResult.data;
     if (!gameSession) return Fail(new GameSessionNotFoundError('Failed to rename topic'));
 
-    const renameResult = gameSession.renameTopic(topicId, name);
+    const renameResult = gameSession.renameTopic(topicId, name, userId);
     if (!renameResult.isOk) return Fail(renameResult.error);
 
     const saveResult = await this.gameSessionRepository.save(gameSession);

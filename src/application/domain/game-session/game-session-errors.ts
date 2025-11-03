@@ -6,6 +6,12 @@ export class GameSessionNotInLobbyError extends AppError<'GameSessionNotInLobbyE
   }
 }
 
+export class UserNotInGameSessionError extends AppError<'UserNotInGameSessionError'> {
+  constructor(message: string) {
+    super(`${message}. User is not in the game session.`, 'UserNotInGameSessionError');
+  }
+}
+
 export class TopicAlreadyInGameSessionError extends AppError<'TopicAlreadyInGameSessionError'> {
   constructor(message: string) {
     super(

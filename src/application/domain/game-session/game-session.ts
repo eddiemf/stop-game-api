@@ -9,6 +9,7 @@ import {
   PlayerNotInSessionError,
   TopicAlreadyInGameSessionError,
   TopicNotFoundError,
+  UserNotInGameSessionError,
 } from './game-session-errors';
 
 interface Props {
@@ -64,7 +65,13 @@ export class GameSession {
     };
   }
 
-  public rename(newName: string): Result<GameSession, ValidationError> {
+  public rename(
+    newName: string,
+    userId: string
+  ): Result<GameSession, ValidationError | UserNotInGameSessionError> {
+    if (!this.isUserInSession(userId))
+      return Fail(new UserNotInGameSessionError('Could not rename game session'));
+
     const nameResult = GameSession.validateName(newName);
     if (!nameResult.isOk) return Fail(nameResult.error);
 
@@ -74,8 +81,15 @@ export class GameSession {
   }
 
   public addTopic(
-    newTopic: GameTopic
-  ): Result<void, GameSessionNotInLobbyError | TopicAlreadyInGameSessionError> {
+    newTopic: GameTopic,
+    userId: string
+  ): Result<
+    void,
+    UserNotInGameSessionError | GameSessionNotInLobbyError | TopicAlreadyInGameSessionError
+  > {
+    if (!this.isUserInSession(userId))
+      return Fail(new UserNotInGameSessionError('Could not add topic'));
+
     if (this.state !== GameSessionState.lobby)
       return Fail(new GameSessionNotInLobbyError('Could not add topic'));
 
@@ -88,8 +102,15 @@ export class GameSession {
   }
 
   public removeTopic(
-    topicId: string
-  ): Result<GameTopic, GameSessionNotInLobbyError | TopicNotFoundError> {
+    topicId: string,
+    userId: string
+  ): Result<
+    GameTopic,
+    UserNotInGameSessionError | GameSessionNotInLobbyError | TopicNotFoundError
+  > {
+    if (!this.isUserInSession(userId))
+      return Fail(new UserNotInGameSessionError('Could not remove topic'));
+
     if (this.state !== GameSessionState.lobby)
       return Fail(new GameSessionNotInLobbyError('Could not remove topic'));
 
@@ -104,8 +125,15 @@ export class GameSession {
 
   public renameTopic(
     topicId: string,
-    newName: string
-  ): Result<GameTopic, GameSessionNotInLobbyError | TopicNotFoundError | ValidationError> {
+    newName: string,
+    userId: string
+  ): Result<
+    GameTopic,
+    UserNotInGameSessionError | GameSessionNotInLobbyError | TopicNotFoundError | ValidationError
+  > {
+    if (!this.isUserInSession(userId))
+      return Fail(new UserNotInGameSessionError('Could not rename topic'));
+
     if (this.state !== GameSessionState.lobby)
       return Fail(new GameSessionNotInLobbyError('Could not rename topic'));
 
@@ -154,6 +182,10 @@ export class GameSession {
 
   public setState(newState: GameSessionState) {
     this.state = newState;
+  }
+
+  private isUserInSession(userId: string): boolean {
+    return this.players.some((player) => player.getUserId() === userId);
   }
 
   public static create({

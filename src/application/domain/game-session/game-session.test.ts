@@ -32,14 +32,14 @@ describe('GameSession', () => {
       expect(gameSession.getId()).toEqual(expect.stringMatching(/^[a-zA-Z0-9+/=]{5}$/));
     });
 
-    it('returns a validation error if `name` has less than 2 characters', () => {
+    it('returns a ValidationError if `name` has less than 2 characters', () => {
       const result = GameSession.create({ name: 'a' });
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('ValidationError');
     });
 
-    it('returns a validation error if `name` has more than 30 characters', () => {
+    it('returns a ValidationError if `name` has more than 30 characters', () => {
       const result = GameSession.create({
         name: 'A long name with more than 30 characters',
       });
@@ -57,26 +57,39 @@ describe('GameSession', () => {
 
   describe('rename', () => {
     it('renames the game session', () => {
-      const gameSession = createGameSession({ name: 'Some name' });
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({ name: 'Some name', players: [player] });
 
-      gameSession.rename('another name');
+      const result = gameSession.rename('another name', 'user-id');
+      if (!result.isOk) throw 'Expected a valid result';
 
       expect(gameSession.getName()).toEqual('another name');
     });
 
-    it('returns a validation error if the given name is shorter than 2 characters', () => {
+    it('returns a UserNotInGameSessionError if the user is not in the game session', () => {
       const gameSession = createGameSession({ name: 'Some name' });
 
-      const result = gameSession.rename('a');
+      const result = gameSession.rename('a', 'invalid-user-id');
+
+      if (result.isOk) throw 'Expected an error';
+      expect(result.error.code).toEqual('UserNotInGameSessionError');
+    });
+
+    it('returns a ValidationError if the given name is shorter than 2 characters', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({ name: 'Some name', players: [player] });
+
+      const result = gameSession.rename('a', 'user-id');
 
       if (result.isOk) throw 'Expected an error';
       expect(result.error.code).toEqual('ValidationError');
     });
 
-    it('returns a validation error if the given name is bigger than 30 characters', () => {
-      const gameSession = createGameSession({ name: 'Some name' });
+    it('returns a ValidationError if the given name is bigger than 30 characters', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({ name: 'Some name', players: [player] });
 
-      const result = gameSession.rename('another really gigantic big name');
+      const result = gameSession.rename('another really gigantic big name', 'user-id');
 
       if (result.isOk) throw 'Expected an error';
       expect(result.error.code).toEqual('ValidationError');
@@ -84,106 +97,162 @@ describe('GameSession', () => {
   });
 
   describe('addTopic', () => {
-    it('returns a GameSessionNotInLobbyError error if the session state is not `lobby`', () => {
+    it('returns a UserNotInGameSessionError if the user is not in the game session', () => {
       const gameSession = createGameSession({
         name: 'Some name',
         state: GameSessionState.matchInProgress,
+        players: [],
       });
       const gameTopic = createGameTopic({ name: 'Some name' });
 
-      const result = gameSession.addTopic(gameTopic);
+      const result = gameSession.addTopic(gameTopic, 'user-id');
+      if (result.isOk) throw 'Expected an error';
+
+      expect(result.error.code).toEqual('UserNotInGameSessionError');
+    });
+
+    it('returns a GameSessionNotInLobbyError if the session state is not `lobby`', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({
+        name: 'Some name',
+        state: GameSessionState.matchInProgress,
+        players: [player],
+      });
+      const gameTopic = createGameTopic({ name: 'Some name' });
+
+      const result = gameSession.addTopic(gameTopic, 'user-id');
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('GameSessionNotInLobbyError');
     });
 
-    it('returns a TopicAlreadyInGameSessionError error if the topic is already in the game session', () => {
+    it('returns a TopicAlreadyInGameSessionError if the topic is already in the game session', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
       const gameTopic = createGameTopic({ name: 'Topic' });
-      const gameSession = createGameSession({ name: 'Session', topics: [gameTopic] });
+      const gameSession = createGameSession({
+        name: 'Session',
+        topics: [gameTopic],
+        players: [player],
+      });
 
-      const result = gameSession.addTopic(gameTopic);
+      const result = gameSession.addTopic(gameTopic, 'user-id');
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('TopicAlreadyInGameSessionError');
     });
 
     it('adds a topic to the game session', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
       const gameTopic = createGameTopic({ name: 'Topic' });
-      const gameSession = createGameSession({ name: 'Session' });
+      const gameSession = createGameSession({ name: 'Session', players: [player] });
 
-      gameSession.addTopic(gameTopic);
+      gameSession.addTopic(gameTopic, 'user-id');
 
       expect(gameSession.getTopics()).toEqual([gameTopic]);
     });
   });
 
   describe('removeTopic', () => {
-    it('returns a GameSessionNotInLobbyError error if the session state is not `lobby`', () => {
+    it('returns a UserNotInGameSessionError if the user is not in the game session', () => {
       const gameSession = createGameSession({
         name: 'Some name',
         state: GameSessionState.matchInProgress,
       });
 
-      const result = gameSession.removeTopic('topicId');
+      const result = gameSession.removeTopic('topicId', 'user-id');
+      if (result.isOk) throw 'Expected an error';
+
+      expect(result.error.code).toEqual('UserNotInGameSessionError');
+    });
+
+    it('returns a GameSessionNotInLobbyError if the session state is not `lobby`', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({
+        name: 'Some name',
+        state: GameSessionState.matchInProgress,
+        players: [player],
+      });
+
+      const result = gameSession.removeTopic('topicId', 'user-id');
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('GameSessionNotInLobbyError');
     });
 
-    it('returns a TopicNotFoundError error if the topic is not in the game session', () => {
-      const gameSession = createGameSession({ name: 'Session' });
+    it('returns a TopicNotFoundError if the topic is not in the game session', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({ name: 'Session', players: [player] });
 
-      const result = gameSession.removeTopic('topicId');
+      const result = gameSession.removeTopic('topicId', 'user-id');
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('TopicNotFoundError');
     });
 
     it('removes a topic from the game session', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
       const gameTopic = createGameTopic({ id: 'topicId', name: 'Topic 1' });
       const gameTopic2 = createGameTopic({ id: 'topicId2', name: 'Topic 2' });
       const gameSession = createGameSession({
         name: 'Session',
         topics: [gameTopic, gameTopic2],
+        players: [player],
       });
 
-      gameSession.removeTopic('topicId');
+      gameSession.removeTopic('topicId', 'user-id');
 
       expect(gameSession.getTopics()).toEqual([gameTopic2]);
     });
   });
 
   describe('renameTopic', () => {
-    it('returns a GameSessionNotInLobbyError error if the session state is not `lobby`', () => {
+    it('returns a UserNotInGameSessionError if the user is not in the game session', () => {
       const gameSession = createGameSession({
         name: 'Some name',
         state: GameSessionState.matchInProgress,
       });
 
-      const result = gameSession.renameTopic('topicId', 'new name');
+      const result = gameSession.renameTopic('topicId', 'new name', 'user-id');
+      if (result.isOk) throw 'Expected an error';
+
+      expect(result.error.code).toEqual('UserNotInGameSessionError');
+    });
+
+    it('returns a GameSessionNotInLobbyError if the session state is not `lobby`', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({
+        name: 'Some name',
+        state: GameSessionState.matchInProgress,
+        players: [player],
+      });
+
+      const result = gameSession.renameTopic('topicId', 'new name', 'user-id');
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('GameSessionNotInLobbyError');
     });
 
-    it('returns a TopicNotFoundError error if the topic is not in the game session', () => {
-      const gameSession = createGameSession({ name: 'Session' });
+    it('returns a TopicNotFoundError if the topic is not in the game session', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
+      const gameSession = createGameSession({ name: 'Session', players: [player] });
 
-      const result = gameSession.renameTopic('topicId', 'new name');
+      const result = gameSession.renameTopic('topicId', 'new name', 'user-id');
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('TopicNotFoundError');
     });
 
     it('renames a topic from the game session', () => {
+      const player = createPlayer({ userId: 'user-id', name: 'Some name' });
       const gameTopic = createGameTopic({ id: 'topicId', name: 'Topic 1' });
       const gameTopic2 = createGameTopic({ id: 'topicId2', name: 'Topic 2' });
       const gameSession = createGameSession({
         name: 'Session',
         topics: [gameTopic, gameTopic2],
+        players: [player],
       });
 
-      gameSession.renameTopic('topicId', 'new name');
+      gameSession.renameTopic('topicId', 'new name', 'user-id');
 
       expect(gameSession.getTopics()[0].getName()).toEqual('new name');
     });
