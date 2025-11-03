@@ -6,8 +6,8 @@ import {
   type GameSessionRepository,
   type TopicNotFoundError,
 } from '@app/domain';
+import { TopicRemovedEvent } from '@app/dtos/events';
 import { GameSessionMapper, GameTopicMapper } from '@app/mappers';
-import { TopicRemovedEvent } from '@app/ports/events';
 import type { GameSessionService } from '@app/ports/services';
 import { Fail, Ok, type PromiseResult } from '@shared/result';
 

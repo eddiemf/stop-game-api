@@ -4,8 +4,8 @@ import {
   type GameSessionRepository,
   type ValidationError,
 } from '@app/domain';
+import type { GameSessionDTO } from '@app/dtos';
 import { GameSessionMapper } from '@app/mappers';
-import type { GameSessionDTO } from '@app/ports/dtos';
 import type { GameSessionService } from '@app/ports/services';
 import { Fail, Ok, type PromiseResult } from '@shared/result';
 

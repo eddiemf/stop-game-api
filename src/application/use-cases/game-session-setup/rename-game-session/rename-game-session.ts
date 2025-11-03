@@ -5,8 +5,8 @@ import {
   type GameSessionRepository,
   type ValidationError,
 } from '@app/domain';
+import { GameSessionRenamedEvent } from '@app/dtos/events';
 import { GameSessionMapper } from '@app/mappers';
-import { GameSessionRenamedEvent } from '@app/ports/events';
 import type { GameSessionService } from '@app/ports/services';
 import { Fail, Ok, type PromiseResult } from '@shared/result';
 

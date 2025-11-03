@@ -3,15 +3,15 @@ import type {
   JoinGameSessionError,
   LeaveGameSessionError,
 } from '@app/domain';
-import type { Result } from '@shared/result';
 import type {
   GameSessionRenamedEvent,
   PlayerJoinedEvent,
   PlayerLeftEvent,
+  TopicAddedEvent,
+  TopicRemovedEvent,
   TopicRenamedEvent,
-} from '../events';
-import type { TopicAddedEvent } from '../events/topic-added-event';
-import type { TopicRemovedEvent } from '../events/topic-removed-event';
+} from '@app/dtos';
+import type { Result } from '@shared/result';
 
 export interface GameSessionService {
   createSession(gameSessionId: string): void;

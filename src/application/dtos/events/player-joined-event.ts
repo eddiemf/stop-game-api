@@ -1,4 +1,4 @@
-import type { GameSessionDTO, PlayerDTO } from '../dtos';
+import type { GameSessionDTO, PlayerDTO } from '../../dtos';
 
 export class PlayerJoinedEvent {
   public readonly type = 'PLAYER_JOINED';

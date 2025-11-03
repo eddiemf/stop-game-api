@@ -6,8 +6,8 @@ import {
   type LeaveGameSessionError,
   type PlayerNotInSessionError,
 } from '@app/domain';
+import { PlayerLeftEvent } from '@app/dtos';
 import { GameSessionMapper, PlayerMapper } from '@app/mappers';
-import { PlayerLeftEvent } from '@app/ports/events';
 import type { GameSessionService } from '@app/ports/services';
 import { Fail, Ok, type PromiseResult } from '@shared/result';
 

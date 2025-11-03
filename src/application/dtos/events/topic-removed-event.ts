@@ -1,7 +1,7 @@
-import type { GameSessionDTO, GameTopicDTO } from '../dtos';
+import type { GameSessionDTO, GameTopicDTO } from '../../dtos';
 
-export class TopicRenamedEvent {
-  public readonly type = 'TOPIC_RENAMED';
+export class TopicRemovedEvent {
+  public readonly type = 'TOPIC_REMOVED';
   public readonly payload: {
     topic: GameTopicDTO;
     gameSession: GameSessionDTO;

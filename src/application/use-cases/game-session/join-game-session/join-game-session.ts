@@ -8,9 +8,8 @@ import {
   type PlayerAlreadyInGameSessionError,
   type ValidationError,
 } from '@app/domain';
+import { type GameSessionDTO, PlayerJoinedEvent } from '@app/dtos';
 import { GameSessionMapper, PlayerMapper } from '@app/mappers';
-import type { GameSessionDTO } from '@app/ports/dtos';
-import { PlayerJoinedEvent } from '@app/ports/events';
 import type { GameSessionService } from '@app/ports/services';
 import { Fail, Ok, type PromiseResult } from '@shared/result';
 

@@ -8,8 +8,8 @@ import {
   type TopicAlreadyInGameSessionError,
   type ValidationError,
 } from '@app/domain';
+import { TopicAddedEvent } from '@app/dtos';
 import { GameSessionMapper, GameTopicMapper } from '@app/mappers';
-import { TopicAddedEvent } from '@app/ports/events';
 import type { GameSessionService } from '@app/ports/services';
 import { Fail, Ok, type PromiseResult } from '@shared/result';
 

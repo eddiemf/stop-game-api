@@ -1,4 +1,4 @@
-import type { GameSessionDTO } from '@app/ports/dtos';
+import type { GameSessionDTO } from '@app/dtos';
 import type { CreateGameSession } from '@app/use-cases';
 import { Fail, Ok } from '@shared/result';
 import { Controller, type ControllerRequest, type ControllerResponse } from '../controller';
