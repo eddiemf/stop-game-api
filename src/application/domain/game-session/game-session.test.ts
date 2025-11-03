@@ -223,14 +223,14 @@ describe('GameSession', () => {
 
   describe('removePlayer', () => {
     it('removes a player from the game session', () => {
-      const player = createPlayer({ id: 'playerId', name: 'Some name' });
-      const player2 = createPlayer({ id: 'playerId2', name: 'Some name' });
+      const player = createPlayer({ userId: 'userId', name: 'Some name' });
+      const player2 = createPlayer({ userId: 'userId2', name: 'Some name' });
       const gameSession = createGameSession({
         name: 'Some name',
         players: [player, player2],
       });
 
-      gameSession.removePlayer('playerId');
+      gameSession.removePlayer('userId');
 
       expect(gameSession.getPlayers()).toEqual([player2]);
     });
@@ -256,14 +256,14 @@ describe('GameSession', () => {
     });
 
     it('disconnects a player from the game session', () => {
-      const player = createPlayer({ id: 'playerId', name: 'Some name', isConnected: true });
-      const player2 = createPlayer({ id: 'playerId2', name: 'Some name', isConnected: true });
+      const player = createPlayer({ userId: 'userId', name: 'Some name', isConnected: true });
+      const player2 = createPlayer({ userId: 'userId2', name: 'Some name', isConnected: true });
       const gameSession = createGameSession({
         name: 'Some name',
         players: [player, player2],
       });
 
-      gameSession.disconnectPlayer('playerId');
+      gameSession.disconnectPlayer('userId');
 
       expect(gameSession.getPlayers()[0].getIsConnected()).toEqual(false);
       expect(gameSession.getPlayers()[1].getIsConnected()).toEqual(true);

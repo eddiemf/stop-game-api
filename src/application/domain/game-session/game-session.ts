@@ -119,7 +119,7 @@ export class GameSession {
   }
 
   public addPlayer(newPlayer: Player): Result<void, PlayerAlreadyInGameSessionError> {
-    const player = this.players.find((player) => player.getId() === newPlayer.getId());
+    const player = this.players.find((player) => player.getUserId() === newPlayer.getUserId());
     if (!player) {
       this.players = this.players.concat(newPlayer);
 
@@ -134,17 +134,17 @@ export class GameSession {
     return Ok(undefined);
   }
 
-  public removePlayer(playerId: string): Result<void, PlayerNotInSessionError> {
-    const playerIndex = this.players.findIndex((player) => player.getId() === playerId);
+  public removePlayer(userId: string): Result<void, PlayerNotInSessionError> {
+    const playerIndex = this.players.findIndex((player) => player.getUserId() === userId);
     if (playerIndex === -1) return Fail(new PlayerNotInSessionError('Could not remove player'));
 
-    this.players = this.players.filter((player) => player.getId() !== playerId);
+    this.players = this.players.filter((player) => player.getUserId() !== userId);
 
     return Ok(undefined);
   }
 
-  public disconnectPlayer(playerId: string): Result<Player, PlayerNotInSessionError> {
-    const player = this.players.find((player) => player.getId() === playerId);
+  public disconnectPlayer(userId: string): Result<Player, PlayerNotInSessionError> {
+    const player = this.players.find((player) => player.getUserId() === userId);
     if (!player) return Fail(new PlayerNotInSessionError('Could not disconnect player'));
 
     player.setConnected(false);

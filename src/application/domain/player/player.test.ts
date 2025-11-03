@@ -11,7 +11,7 @@ const createPlayer = (props: any) => {
 describe('Player', () => {
   describe('create', () => {
     it('creates a player with a random id if `id` is not given', () => {
-      const result = Player.create({ name: 'New player' });
+      const result = Player.create({ name: 'New player', userId: 'user-id' });
       if (!result.isOk) throw 'Expected player to be created';
 
       const player = result.data;
@@ -20,7 +20,7 @@ describe('Player', () => {
     });
 
     it('creates a player with the given `id`', () => {
-      const result = Player.create({ id: 'id', name: 'New player' });
+      const result = Player.create({ id: 'id', name: 'New player', userId: 'user-id' });
       if (!result.isOk) throw 'Expected player to be created';
 
       const player = result.data;
@@ -29,7 +29,7 @@ describe('Player', () => {
     });
 
     it('returns a ValidationError if `name` has less than 2 characters', () => {
-      const result = Player.create({ name: 'a' });
+      const result = Player.create({ name: 'a', userId: 'user-id' });
       if (result.isOk) throw 'Expected an error';
 
       expect(result.error.code).toEqual('ValidationError');
@@ -38,6 +38,7 @@ describe('Player', () => {
     it('returns a ValidationError if `name` has more than 50 characters', () => {
       const result = Player.create({
         name: 'A really long name with more than 50 characters wow',
+        userId: 'user-id',
       });
       if (result.isOk) throw 'Expected an error';
 
@@ -45,7 +46,7 @@ describe('Player', () => {
     });
 
     it('creates a player with `isConnected` set to `true` when it is not given', () => {
-      const result = Player.create({ name: 'New player' });
+      const result = Player.create({ name: 'New player', userId: 'user-id' });
       if (!result.isOk) throw 'Expected player to be created';
 
       const player = result.data;
@@ -54,7 +55,7 @@ describe('Player', () => {
     });
 
     it('creates a player with `isConnected` set to `false` when it is given', () => {
-      const result = Player.create({ name: 'New player', isConnected: false });
+      const result = Player.create({ name: 'New player', isConnected: false, userId: 'user-id' });
       if (!result.isOk) throw 'Expected player to be created';
 
       const player = result.data;
