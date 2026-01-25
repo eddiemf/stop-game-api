@@ -1,119 +1,140 @@
-import type { GameSessionRepository } from '@app/domain';
-import type { GameSessionService } from '@app/ports/services';
-import { afterEach, beforeEach, describe, it, vi } from 'vitest';
+import {
+  BroadcastToGameSessionError,
+  DatabaseError,
+  GameSession,
+  type GameSessionRepository,
+  GameSessionState,
+  GameTopic,
+  Player,
+} from '@app/domain';
+import type { GameConnection } from '@app/ports/game-connection';
+import { fail, ok } from '@shared/result';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { AddTopic } from './add-topic';
 
 describe('AddTopic', () => {
   const gameSessionRepository = mock<GameSessionRepository>();
-  const gameSessionService = mock<GameSessionService>();
+  const gameConnection = mock<GameConnection>();
 
-  const useCase = new AddTopic(gameSessionRepository, gameSessionService);
+  const useCase = new AddTopic(gameSessionRepository, gameConnection);
 
-  beforeEach(() => {});
-
-  afterEach(() => {
-    vi.clearAllMocks();
+  beforeEach(() => {
+    const player = Player.create({ name: 'User', userId: 'userId' }).getData();
+    const gameSession = GameSession.create({
+      name: 'Test Session',
+      players: [player],
+      state: GameSessionState.lobby,
+    }).getData();
+    gameSessionRepository.findById.mockResolvedValue(ok(gameSession));
+    gameSessionRepository.save.mockResolvedValue(ok(undefined));
+    gameConnection.broadcastToSession.mockReturnValue(ok(undefined));
   });
 
-  it('returns a ValidationError if the topic is invalid', async () => {
-    const result = await useCase.execute({
-      sessionId: '1',
-      name: 'a',
-    });
-    if (result.isOk) fail('Expected an error');
+  it('returns a ValidationError if the topic name is invalid', async () => {
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: '' })
+    ).getError();
 
-    expect(result.error).toBe(INVALID_INPUT);
+    expect(error).toMatchObject({ code: 'ValidationError', field: 'name' });
   });
 
-  it('returns a DATABASE_ERROR error if finding the game session fails', async () => {
-    mockedFindGameSession.execute.mockResolvedValue(Error(DATABASE_ERROR));
+  it('returns a DatabaseError error if finding the game session fails', async () => {
+    gameSessionRepository.findById.mockResolvedValue(fail(new DatabaseError('Error')));
 
-    const result = await useCase.execute({
-      gameSessionRepository,
-      sessionId: '1',
-      name: 'Some name',
-    });
-    if (result.isOk) fail('Expected an error');
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: 'Some name' })
+    ).getError();
 
-    expect(result.error).toBe(DATABASE_ERROR);
-    expect(mockedFindGameSession.execute).toHaveBeenCalledWith({
-      gameSessionRepository,
-      id: '1',
-    });
+    expect(gameSessionRepository.findById).toHaveBeenCalledWith('sessionId');
+    expect(error.code).toEqual('DatabaseError');
   });
 
-  it('returns a GAME_SESSION_NOT_FOUND error if the game session could not be found', async () => {
-    mockedFindGameSession.execute.mockResolvedValue(Ok(null));
+  it('returns a GameSessionNotFoundError error if the game session could not be found', async () => {
+    gameSessionRepository.findById.mockResolvedValue(ok(null));
 
-    const result = await useCase.execute({
-      gameSessionRepository,
-      sessionId: '1',
-      name: 'Some name',
-    });
-    if (result.isOk) fail('Expected an error');
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: 'Some name' })
+    ).getError();
 
-    expect(result.error).toBe(GAME_SESSION_NOT_FOUND);
-    expect(mockedFindGameSession.execute).toHaveBeenCalledWith({
-      gameSessionRepository,
-      id: '1',
-    });
+    expect(error.code).toBe('GameSessionNotFoundError');
   });
 
-  it('returns a TOPIC_ALREADY_IN_GAME_SESSION error if the topic is already in the game session', async () => {
-    mockedGameSession.addTopic.mockReturnValue(Error(TOPIC_ALREADY_IN_GAME_SESSION));
+  it('returns a TopicAlreadyInGameSessionError error if the topic is already in the game session', async () => {
+    const player = Player.create({ name: 'User', userId: 'userId' }).getData();
+    const topic = GameTopic.create({ name: 'Some name' }).getData();
+    const gameSession = GameSession.create({
+      name: 'Test Session',
+      players: [player],
+      topics: [topic],
+      state: GameSessionState.lobby,
+    }).getData();
+    gameSessionRepository.findById.mockResolvedValue(ok(gameSession));
 
-    const result = await useCase.execute({
-      gameSessionRepository,
-      sessionId: '1',
-      name: 'Some name',
-    });
-    if (result.isOk) fail('Expected an error');
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: 'Some name' })
+    ).getError();
 
-    expect(result.error).toBe(TOPIC_ALREADY_IN_GAME_SESSION);
-    expect(mockedGameSession.addTopic).toHaveBeenCalled();
+    expect(error.code).toBe('TopicAlreadyInGameSessionError');
   });
 
-  it('returns a GAME_SESSION_NOT_IN_LOBBY error if the game session is not in `lobby` state', async () => {
-    mockedFindGameSession.execute.mockResolvedValue(
-      Ok({ ...mockedGameSession, state: IGameSessionState.matchInProgress })
+  it('returns a GameSessionNotInLobbyError error if the game session is not in `lobby` state', async () => {
+    const player = Player.create({ name: 'User', userId: 'userId' }).getData();
+    const gameSession = GameSession.create({
+      name: 'Test Session',
+      players: [player],
+      state: GameSessionState.matchInProgress,
+    }).getData();
+    gameSessionRepository.findById.mockResolvedValue(ok(gameSession));
+
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: 'Some name' })
+    ).getError();
+
+    expect(error.code).toBe('GameSessionNotInLobbyError');
+  });
+
+  it('returns a DatabaseError error if the game session fails to be saved in the repository', async () => {
+    gameSessionRepository.save.mockResolvedValue(fail(new DatabaseError('Error')));
+
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: 'Some name' })
+    ).getError();
+
+    const gameSession = gameSessionRepository.findById.mock.settledResults[0].value.data;
+    expect(gameSessionRepository.save).toHaveBeenCalledWith(gameSession);
+    expect(error.code).toBe('DatabaseError');
+  });
+
+  it('returns a BroadcastToGameSessionError error if broadcasting to the game session fails', async () => {
+    gameConnection.broadcastToSession.mockReturnValue(
+      fail(new BroadcastToGameSessionError('Error'))
     );
-    mockedGameSession.addTopic.mockReturnValue(Error(GAME_SESSION_NOT_IN_LOBBY));
 
-    const result = await useCase.execute({
-      gameSessionRepository,
-      sessionId: '1',
-      name: 'Some name',
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: 'Some name' })
+    ).getError();
+
+    const gameSession = gameSessionRepository.findById.mock.settledResults[0].value.data;
+    expect(gameConnection.broadcastToSession).toHaveBeenCalledWith(gameSession.id, {
+      type: 'TOPIC_ADDED',
+      payload: {
+        topic: expect.objectContaining({ name: 'Some name' }),
+        gameSession: expect.objectContaining({ id: gameSession.id, name: 'Test Session' }),
+      },
     });
-    if (result.isOk) fail('Expected an error');
-
-    expect(result.error).toBe(GAME_SESSION_NOT_IN_LOBBY);
-    expect(mockedGameSession.addTopic).toHaveBeenCalled();
+    expect(error.code).toBe('BroadcastToGameSessionError');
   });
 
-  it('returns a DATABASE_ERROR error if the game session fails to be saved in the repository', async () => {
-    gameSessionRepository.save.mockResolvedValue(Error(DATABASE_ERROR));
+  it('returns the game session DTO with the added topic', async () => {
+    const gameSessionDTO = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'userId', name: 'Some name' })
+    ).getData();
 
-    const result = await useCase.execute({
-      gameSessionRepository,
-      sessionId: '1',
-      name: 'Some name',
+    expect(gameSessionDTO).toMatchObject({
+      name: 'Test Session',
+      topics: [{ name: 'Some name' }],
     });
-    if (result.isOk) fail('Expected an error');
-
-    expect(gameSessionRepository.save).toHaveBeenCalledWith(mockedGameSession);
-    expect(result.error).toBe(DATABASE_ERROR);
-  });
-
-  it('broadcasts and returns the game session with the added topic', async () => {
-    const result = await useCase.execute({
-      gameSessionRepository,
-      sessionId: '1',
-      name: 'Some name',
-    });
-    if (!result.isOk) fail('Expected a success result');
-
-    expect(mockedPublish).toHaveBeenCalledWith(TOPIC_ADDED_EVENT, mockedGameSession);
-    expect(result.data).toBe(mockedGameSession);
+    expect(gameSessionDTO).not.toBeInstanceOf(GameSession);
   });
 });

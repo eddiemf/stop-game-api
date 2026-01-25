@@ -1,5 +1,5 @@
 import { Id } from '@shared/id';
-import { Fail, Ok, type Result } from '@shared/result';
+import { fail, ok, type Result } from '@shared/result';
 import { ValidationError } from '../errors/validation-error';
 import type { GameTopic } from '../game-topic';
 import type { Player } from '../player';
@@ -8,6 +8,7 @@ import {
   PlayerAlreadyInGameSessionError,
   PlayerNotInSessionError,
   TopicAlreadyInGameSessionError,
+  TopicNameAlreadyInSessionError,
   TopicNotFoundError,
   UserNotInGameSessionError,
 } from './game-session-errors';
@@ -28,41 +29,31 @@ export enum GameSessionState {
 
 export class GameSession {
   private constructor(
-    private id: string,
-    private name: string,
-    private topics: GameTopic[],
-    private players: Player[],
-    private state: GameSessionState
+    private _id: string,
+    private _name: string,
+    private _topics: GameTopic[],
+    private _players: Player[],
+    private _state: GameSessionState
   ) {}
 
-  public getId(): string {
-    return this.id;
+  public get id(): string {
+    return this._id;
   }
 
-  public getName(): string {
-    return this.name;
+  public get name(): string {
+    return this._name;
   }
 
-  public getTopics(): GameTopic[] {
-    return this.topics;
+  public get topics(): GameTopic[] {
+    return this._topics;
   }
 
-  public getPlayers(): Player[] {
-    return this.players;
+  public get players(): Player[] {
+    return this._players;
   }
 
-  public getState(): GameSessionState {
-    return this.state;
-  }
-
-  public getProps(): Props {
-    return {
-      id: this.id,
-      name: this.name,
-      topics: this.topics,
-      players: this.players,
-      state: this.state,
-    };
+  public get state(): GameSessionState {
+    return this._state;
   }
 
   public rename(
@@ -70,14 +61,14 @@ export class GameSession {
     userId: string
   ): Result<GameSession, ValidationError | UserNotInGameSessionError> {
     if (!this.isUserInSession(userId))
-      return Fail(new UserNotInGameSessionError('Could not rename game session'));
+      return fail(new UserNotInGameSessionError('Could not rename game session'));
 
     const nameResult = GameSession.validateName(newName);
-    if (!nameResult.isOk) return Fail(nameResult.error);
+    if (!nameResult.isOk) return fail(nameResult.error);
 
-    this.name = newName;
+    this._name = newName;
 
-    return Ok(this);
+    return ok(this);
   }
 
   public addTopic(
@@ -88,39 +79,38 @@ export class GameSession {
     UserNotInGameSessionError | GameSessionNotInLobbyError | TopicAlreadyInGameSessionError
   > {
     if (!this.isUserInSession(userId))
-      return Fail(new UserNotInGameSessionError('Could not add topic'));
+      return fail(new UserNotInGameSessionError('Could not add topic'));
 
     if (this.state !== GameSessionState.lobby)
-      return Fail(new GameSessionNotInLobbyError('Could not add topic'));
+      return fail(new GameSessionNotInLobbyError('Could not add topic'));
 
-    if (this.topics.find((topic) => newTopic.getId() === topic.getId()))
-      return Fail(new TopicAlreadyInGameSessionError('Could not add topic'));
+    if (this._topics.find((topic) => newTopic.name.trim() === topic.name.trim()))
+      return fail(new TopicAlreadyInGameSessionError('Could not add topic'));
 
-    this.topics = this.topics.concat(newTopic);
+    this._topics = this._topics.concat(newTopic);
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 
   public removeTopic(
-    topicId: string,
+    topicName: string,
     userId: string
   ): Result<
     GameTopic,
     UserNotInGameSessionError | GameSessionNotInLobbyError | TopicNotFoundError
   > {
     if (!this.isUserInSession(userId))
-      return Fail(new UserNotInGameSessionError('Could not remove topic'));
+      return fail(new UserNotInGameSessionError('Could not remove topic'));
 
     if (this.state !== GameSessionState.lobby)
-      return Fail(new GameSessionNotInLobbyError('Could not remove topic'));
+      return fail(new GameSessionNotInLobbyError('Could not remove topic'));
 
-    const topicIndex = this.topics.findIndex((topic) => topic.getId() === topicId);
-    if (topicIndex === -1) return Fail(new TopicNotFoundError('Could not remove topic'));
+    const topicIndex = this._topics.findIndex((topic) => topic.name === topicName);
+    if (topicIndex === -1) return fail(new TopicNotFoundError('Could not remove topic'));
 
-    const topic = this.topics[topicIndex];
-    this.topics = this.topics.filter((topic) => topic.getId() !== topicId);
-
-    return Ok(topic);
+    const topic = this._topics[topicIndex];
+    this._topics = this._topics.filter((topic) => topic.name !== topicName);
+    return ok(topic);
   }
 
   public renameTopic(
@@ -129,63 +119,73 @@ export class GameSession {
     userId: string
   ): Result<
     GameTopic,
-    UserNotInGameSessionError | GameSessionNotInLobbyError | TopicNotFoundError | ValidationError
+    | UserNotInGameSessionError
+    | GameSessionNotInLobbyError
+    | TopicNotFoundError
+    | TopicNameAlreadyInSessionError
+    | ValidationError
   > {
     if (!this.isUserInSession(userId))
-      return Fail(new UserNotInGameSessionError('Could not rename topic'));
+      return fail(new UserNotInGameSessionError('Could not rename topic'));
 
-    if (this.state !== GameSessionState.lobby)
-      return Fail(new GameSessionNotInLobbyError('Could not rename topic'));
+    if (this._state !== GameSessionState.lobby)
+      return fail(new GameSessionNotInLobbyError('Could not rename topic'));
 
-    const topic = this.topics.find((topic) => topic.getId() === topicId);
-    if (!topic) return Fail(new TopicNotFoundError('Could not rename topic'));
+    const topic = this._topics.find((topic) => topic.id === topicId);
+    if (!topic) return fail(new TopicNotFoundError('Could not rename topic'));
+
+    const topicWithSameName = this._topics.find(
+      (topic) => topic.name.trim().toLowerCase() === newName.trim().toLowerCase()
+    );
+    if (topicWithSameName)
+      return fail(new TopicNameAlreadyInSessionError('Could not rename topic'));
 
     const result = topic.setName(newName);
-    if (!result.isOk) return Fail(result.error);
+    if (!result.isOk) return fail(result.error);
 
-    return Ok(topic);
+    return ok(topic);
   }
 
   public addPlayer(newPlayer: Player): Result<void, PlayerAlreadyInGameSessionError> {
-    const player = this.players.find((player) => player.getUserId() === newPlayer.getUserId());
+    const player = this._players.find((player) => player.userId === newPlayer.userId);
     if (!player) {
-      this.players = this.players.concat(newPlayer);
+      this._players = this._players.concat(newPlayer);
 
-      return Ok(undefined);
+      return ok(undefined);
     }
 
-    if (player.getIsConnected())
-      return Fail(new PlayerAlreadyInGameSessionError('Could not add player'));
+    if (player.isConnected)
+      return fail(new PlayerAlreadyInGameSessionError('Could not add player'));
 
     player.setConnected(true);
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 
   public removePlayer(userId: string): Result<void, PlayerNotInSessionError> {
-    const playerIndex = this.players.findIndex((player) => player.getUserId() === userId);
-    if (playerIndex === -1) return Fail(new PlayerNotInSessionError('Could not remove player'));
+    const playerIndex = this._players.findIndex((player) => player.userId === userId);
+    if (playerIndex === -1) return fail(new PlayerNotInSessionError('Could not remove player'));
 
-    this.players = this.players.filter((player) => player.getUserId() !== userId);
+    this._players = this._players.filter((player) => player.userId !== userId);
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 
   public disconnectPlayer(userId: string): Result<Player, PlayerNotInSessionError> {
-    const player = this.players.find((player) => player.getUserId() === userId);
-    if (!player) return Fail(new PlayerNotInSessionError('Could not disconnect player'));
+    const player = this._players.find((player) => player.userId === userId);
+    if (!player) return fail(new PlayerNotInSessionError('Could not disconnect player'));
 
     player.setConnected(false);
 
-    return Ok(player);
+    return ok(player);
   }
 
   public setState(newState: GameSessionState) {
-    this.state = newState;
+    this._state = newState;
   }
 
   private isUserInSession(userId: string): boolean {
-    return this.players.some((player) => player.getUserId() === userId);
+    return this._players.some((player) => player.userId === userId);
   }
 
   public static create({
@@ -196,18 +196,18 @@ export class GameSession {
     state = GameSessionState.lobby,
   }: Props): Result<GameSession, ValidationError> {
     const nameResult = GameSession.validateName(name);
-    if (!nameResult.isOk) return Fail(nameResult.error);
+    if (!nameResult.isOk) return fail(nameResult.error);
 
-    return Ok(new GameSession(id, name, topics, players, state));
+    return ok(new GameSession(id, name, topics, players, state));
   }
 
   private static validateName(name: string): Result<string, ValidationError> {
-    if (!name) return Fail(new ValidationError('name', 'Name is required and cannot be empty.'));
+    if (!name) return fail(new ValidationError('name', 'Name is required and cannot be empty.'));
     if (typeof name !== 'string')
-      return Fail(new ValidationError('name', 'Name must be a string.'));
+      return fail(new ValidationError('name', 'Name must be a string.'));
     if (name.length < 2 || name.length > 30)
-      return Fail(new ValidationError('name', 'Name must be between 2 and 30 characters long.'));
+      return fail(new ValidationError('name', 'Name must be between 2 and 30 characters long.'));
 
-    return Ok(name);
+    return ok(name);
   }
 }

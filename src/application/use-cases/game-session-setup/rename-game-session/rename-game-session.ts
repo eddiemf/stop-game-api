@@ -6,10 +6,9 @@ import {
   type UserNotInGameSessionError,
   type ValidationError,
 } from '@app/domain';
-import { GameSessionRenamedEvent } from '@app/dtos/events';
-import { GameSessionMapper } from '@app/mappers';
-import type { GameSessionService } from '@app/ports/services';
-import { Fail, Ok, type PromiseResult } from '@shared/result';
+import { gameSessionToDTO } from '@app/mappers';
+import type { GameConnection } from '@app/ports';
+import { fail, ok, type PromiseResult } from '@shared/result';
 
 interface Input {
   gameSessionId: string;
@@ -20,7 +19,7 @@ interface Input {
 export class RenameGameSession {
   constructor(
     private gameSessionRepository: GameSessionRepository,
-    private gameSessionService: GameSessionService
+    private gameConnection: GameConnection
   ) {}
 
   async execute({
@@ -36,25 +35,23 @@ export class RenameGameSession {
     | BroadcastToGameSessionError
   > {
     const gameSessionResult = await this.gameSessionRepository.findById(gameSessionId);
-    if (!gameSessionResult.isOk) return Fail(gameSessionResult.error);
+    if (!gameSessionResult.isOk) return fail(gameSessionResult.error);
 
     const gameSession = gameSessionResult.data;
-    if (!gameSession) return Fail(new GameSessionNotFoundError('Failed to rename game session'));
+    if (!gameSession) return fail(new GameSessionNotFoundError('Failed to rename game session'));
 
     const renameResult = gameSession.rename(name, userId);
-    if (!renameResult.isOk) return Fail(renameResult.error);
+    if (!renameResult.isOk) return fail(renameResult.error);
 
     const saveResult = await this.gameSessionRepository.save(gameSession);
-    if (!saveResult.isOk) return Fail(saveResult.error);
+    if (!saveResult.isOk) return fail(saveResult.error);
 
-    const broadcastResult = this.gameSessionService.broadcastToSession(
-      gameSessionId,
-      new GameSessionRenamedEvent({
-        gameSession: GameSessionMapper.toDTO(gameSession),
-      })
-    );
-    if (!broadcastResult.isOk) return Fail(broadcastResult.error);
+    const broadcastResult = this.gameConnection.broadcastToSession(gameSessionId, {
+      type: 'GAME_SESSION_RENAMED',
+      payload: { gameSession: gameSessionToDTO(gameSession) },
+    });
+    if (!broadcastResult.isOk) return fail(broadcastResult.error);
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 }

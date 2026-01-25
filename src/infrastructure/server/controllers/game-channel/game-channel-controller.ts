@@ -1,6 +1,6 @@
 import type { GameSessionDTO } from '@app/dtos';
 import type { CreateGameSession } from '@app/use-cases';
-import { Fail, Ok } from '@shared/result';
+import { fail, ok } from '@shared/result';
 import { Controller, type ControllerRequest, type ControllerResponse } from '../controller';
 
 export class GameChannelController extends Controller {
@@ -13,7 +13,7 @@ export class GameChannelController extends Controller {
       const { name } = body;
 
       if (!name || typeof name !== 'string') {
-        return Fail({
+        return fail({
           status: 400,
           error: this.mapValidationError('name', 'Name must be a string.'),
         });
@@ -24,14 +24,14 @@ export class GameChannelController extends Controller {
       if (!gameSessionResult.isOk) {
         const error = this.mapErrorFromResult(gameSessionResult);
 
-        if (error.code === 'ValidationError') return Fail({ status: 400, error });
+        if (error.code === 'ValidationError') return fail({ status: 400, error });
 
-        return Fail({ status: 500, error });
+        return fail({ status: 500, error });
       }
 
-      return Ok({ status: 200, data: gameSessionResult.data });
+      return ok({ status: 200, data: gameSessionResult.data });
     } catch (_) {
-      return Fail({ status: 500, error: this.getInternalServerError() });
+      return fail({ status: 500, error: this.getInternalServerError() });
     }
   }
 

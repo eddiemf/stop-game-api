@@ -1,5 +1,5 @@
 import { Id } from '@shared/id';
-import { Fail, Ok, type Result } from '@shared/result';
+import { fail, ok, type Result } from '@shared/result';
 import { ValidationError } from '../errors/validation-error';
 
 interface Props {
@@ -11,48 +11,39 @@ interface Props {
 
 export class Player {
   private constructor(
-    private id: string,
-    private userId: string,
-    private name: string,
-    private isConnected: boolean
+    private _id: string,
+    private _userId: string,
+    private _name: string,
+    private _isConnected: boolean
   ) {}
 
-  public getId(): string {
-    return this.id;
+  public get id() {
+    return this._id;
   }
 
-  public getUserId(): string {
-    return this.userId;
+  public get userId(): string {
+    return this._userId;
   }
 
-  public getName(): string {
-    return this.name;
+  public get name(): string {
+    return this._name;
   }
 
-  public getIsConnected(): boolean {
-    return this.isConnected;
-  }
-
-  public getProps(): Props {
-    return {
-      id: this.id,
-      userId: this.userId,
-      name: this.name,
-      isConnected: this.isConnected,
-    };
+  public get isConnected(): boolean {
+    return this._isConnected;
   }
 
   public setName(name: string): Result<void, ValidationError> {
     const nameResult = Player.validateName(name);
-    if (!nameResult.isOk) return Fail(nameResult.error);
+    if (!nameResult.isOk) return fail(nameResult.error);
 
-    this.name = name;
+    this._name = name;
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 
   public setConnected(isConnected: boolean): void {
-    this.isConnected = isConnected;
+    this._isConnected = isConnected;
   }
 
   static create({
@@ -62,18 +53,18 @@ export class Player {
     isConnected = true,
   }: Props): Result<Player, ValidationError> {
     const nameResult = Player.validateName(name);
-    if (!nameResult.isOk) return Fail(nameResult.error);
+    if (!nameResult.isOk) return fail(nameResult.error);
 
-    return Ok(new Player(id, userId, name, isConnected));
+    return ok(new Player(id, userId, name, isConnected));
   }
 
   private static validateName(name: string): Result<string, ValidationError> {
-    if (!name) return Fail(new ValidationError('name', 'Name is required and cannot be empty.'));
+    if (!name) return fail(new ValidationError('name', 'Name is required and cannot be empty.'));
     if (typeof name !== 'string')
-      return Fail(new ValidationError('name', 'Name must be a string.'));
+      return fail(new ValidationError('name', 'Name must be a string.'));
     if (name.length < 2 || name.length > 50)
-      return Fail(new ValidationError('name', 'Name must be between 2 and 50 characters long.'));
+      return fail(new ValidationError('name', 'Name must be between 2 and 50 characters long.'));
 
-    return Ok(name);
+    return ok(name);
   }
 }

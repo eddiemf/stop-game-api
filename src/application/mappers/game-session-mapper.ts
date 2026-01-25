@@ -1,32 +1,14 @@
-import { GameSession } from '@app/domain';
+import type { GameSession } from '@app/domain';
 import type { GameSessionDTO } from '@app/dtos';
-import { GameTopicMapper } from './game-topic-mapper';
-import { PlayerMapper } from './player-mapper';
+import { gameTopicToDTO } from './game-topic-mapper';
+import { playerToDTO } from './player-mapper';
 
-export class GameSessionMapper {
-  public static toEntity(gameSessionData: any): GameSession | null {
-    const result = GameSession.create({
-      id: gameSessionData.id,
-      name: gameSessionData.name,
-      topics: gameSessionData.topics.map(GameTopicMapper.toEntity),
-      // .filter((topic) => !!topic) as IGameTopicEntity[],
-      players: gameSessionData.players.map(PlayerMapper.toEntity),
-      // .filter((player) => !!player) as IPlayerEntity[],
-      state: gameSessionData.state,
-    });
-
-    if (!result.isOk) return null;
-
-    return result.data;
-  }
-
-  public static toDTO(gameSession: GameSession): GameSessionDTO {
-    return {
-      id: gameSession.getId(),
-      name: gameSession.getName(),
-      topics: gameSession.getTopics().map(GameTopicMapper.toDTO),
-      players: gameSession.getPlayers().map(PlayerMapper.toDTO),
-      state: gameSession.getState(),
-    };
-  }
+export function gameSessionToDTO(gameSession: GameSession): GameSessionDTO {
+  return {
+    id: gameSession.id,
+    name: gameSession.name,
+    topics: gameSession.topics.map(gameTopicToDTO),
+    players: gameSession.players.map(playerToDTO),
+    state: gameSession.state,
+  };
 }

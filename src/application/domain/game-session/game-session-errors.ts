@@ -27,6 +27,15 @@ export class TopicNotFoundError extends AppError<'TopicNotFoundError'> {
   }
 }
 
+export class TopicNameAlreadyInSessionError extends AppError<'TopicNameAlreadyInSessionError'> {
+  constructor(message: string) {
+    super(
+      `${message}. There is already a topic with the same name in the game session.`,
+      'TopicNameAlreadyInSessionError'
+    );
+  }
+}
+
 export class PlayerAlreadyInGameSessionError extends AppError<'PlayerAlreadyInGameSessionError'> {
   constructor(message: string) {
     super(

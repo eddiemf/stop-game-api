@@ -16,7 +16,7 @@ describe('Player', () => {
 
       const player = result.data;
 
-      expect(player.getId()).toEqual(expect.stringMatching(/^[a-z0-9-]+$/));
+      expect(player.id).toEqual(expect.stringMatching(/^[a-z0-9-]+$/));
     });
 
     it('creates a player with the given `id`', () => {
@@ -25,7 +25,22 @@ describe('Player', () => {
 
       const player = result.data;
 
-      expect(player.getId()).toEqual('id');
+      expect(player.id).toEqual('id');
+    });
+
+    it('returns a ValidationError if `name` is an empty string', () => {
+      const result = Player.create({ name: '', userId: 'user-id' });
+      if (result.isOk) throw 'Expected an error';
+
+      expect(result.error.code).toEqual('ValidationError');
+    });
+
+    it('returns a ValidationError if `name` is not a string', () => {
+      // @ts-expect-error
+      const result = Player.create({ name: 123, userId: 'user-id' });
+      if (result.isOk) throw 'Expected an error';
+
+      expect(result.error.code).toEqual('ValidationError');
     });
 
     it('returns a ValidationError if `name` has less than 2 characters', () => {
@@ -51,7 +66,7 @@ describe('Player', () => {
 
       const player = result.data;
 
-      expect(player.getIsConnected()).toEqual(true);
+      expect(player.isConnected).toEqual(true);
     });
 
     it('creates a player with `isConnected` set to `false` when it is given', () => {
@@ -60,7 +75,7 @@ describe('Player', () => {
 
       const player = result.data;
 
-      expect(player.getIsConnected()).toEqual(false);
+      expect(player.isConnected).toEqual(false);
     });
   });
 
@@ -70,7 +85,7 @@ describe('Player', () => {
 
       player.setName('New name');
 
-      expect(player.getName()).toEqual('New name');
+      expect(player.name).toEqual('New name');
     });
 
     it('returns a ValidationError if the given name is shorter than 2 characters', () => {
@@ -98,7 +113,7 @@ describe('Player', () => {
 
       player.setConnected(false);
 
-      expect(player.getIsConnected()).toEqual(false);
+      expect(player.isConnected).toEqual(false);
     });
   });
 });

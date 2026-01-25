@@ -1,4 +1,5 @@
 import {
+  type BroadcastToGameSessionError,
   type DatabaseError,
   type GameSession,
   GameSessionNotFoundError,
@@ -9,10 +10,10 @@ import {
   type UserNotInGameSessionError,
   type ValidationError,
 } from '@app/domain';
-import { TopicAddedEvent } from '@app/dtos';
-import { GameSessionMapper, GameTopicMapper } from '@app/mappers';
-import type { GameSessionService } from '@app/ports/services';
-import { Fail, Ok, type PromiseResult } from '@shared/result';
+import type { GameSessionDTO } from '@app/dtos';
+import { gameSessionToDTO, gameTopicToDTO } from '@app/mappers';
+import type { GameConnection } from '@app/ports';
+import { fail, ok, type PromiseResult } from '@shared/result';
 
 interface Input {
   sessionId: string;
@@ -23,7 +24,7 @@ interface Input {
 export class AddTopic {
   constructor(
     private gameSessionRepository: GameSessionRepository,
-    private gameSessionService: GameSessionService
+    private gameConnection: GameConnection
   ) {}
 
   async execute({
@@ -32,40 +33,42 @@ export class AddTopic {
     name,
   }: Input): Promise<
     PromiseResult<
-      GameSession,
+      GameSessionDTO,
       | ValidationError
       | DatabaseError
       | UserNotInGameSessionError
       | GameSessionNotFoundError
       | GameSessionNotInLobbyError
       | TopicAlreadyInGameSessionError
+      | BroadcastToGameSessionError
     >
   > {
     const creationResult = GameTopic.create({ name });
-    if (!creationResult.isOk) return Fail(creationResult.error);
+    if (!creationResult.isOk) return fail(creationResult.error);
 
     const topic = creationResult.data;
     const gameSessionResult = await this.gameSessionRepository.findById(sessionId);
 
-    if (!gameSessionResult.isOk) return Fail(gameSessionResult.error);
+    if (!gameSessionResult.isOk) return fail(gameSessionResult.error);
 
     const gameSession = gameSessionResult.data;
-    if (!gameSession) return Fail(new GameSessionNotFoundError('Failed to add topic'));
+    if (!gameSession) return fail(new GameSessionNotFoundError('Failed to add topic'));
 
     const addTopicResult = gameSession.addTopic(topic, userId);
-    if (!addTopicResult.isOk) return Fail(addTopicResult.error);
+    if (!addTopicResult.isOk) return fail(addTopicResult.error);
 
     const saveResult = await this.gameSessionRepository.save(gameSession);
-    if (!saveResult.isOk) return Fail(saveResult.error);
+    if (!saveResult.isOk) return fail(saveResult.error);
 
-    this.gameSessionService.broadcastToSession(
-      gameSession.getId(),
-      new TopicAddedEvent({
-        topic: GameTopicMapper.toDTO(topic),
-        gameSession: GameSessionMapper.toDTO(gameSession),
-      })
-    );
+    const broadcastResult = this.gameConnection.broadcastToSession(gameSession.id, {
+      type: 'TOPIC_ADDED',
+      payload: {
+        topic: gameTopicToDTO(topic),
+        gameSession: gameSessionToDTO(gameSession),
+      },
+    });
+    if (!broadcastResult.isOk) return fail(broadcastResult.error);
 
-    return Ok(gameSession);
+    return ok(gameSessionToDTO(gameSession));
   }
 }

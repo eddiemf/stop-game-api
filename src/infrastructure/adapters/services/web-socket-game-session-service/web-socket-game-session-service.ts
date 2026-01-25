@@ -5,7 +5,7 @@ import {
   SendMessageToPlayerError,
 } from '@app/domain';
 import type { GameSessionEvent } from '@app/ports/services';
-import { Fail, Ok } from '@shared/result';
+import { fail, ok } from '@shared/result';
 
 export class WebSocketGameSessionService {
   private connections: Map<string, WebSocket> = new Map();
@@ -18,33 +18,33 @@ export class WebSocketGameSessionService {
   createSession(gameSessionId: string) {
     this.sessions.set(gameSessionId, new Map());
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 
   addPlayerToSession(gameSessionId: string, playerUserId: string) {
     const session = this.sessions.get(gameSessionId);
-    if (!session) return Fail(new JoinGameSessionError('The session does not exist'));
+    if (!session) return fail(new JoinGameSessionError('The session does not exist'));
 
     const userConnection = this.connections.get(playerUserId);
-    if (!userConnection) return Fail(new JoinGameSessionError('User connection not found'));
+    if (!userConnection) return fail(new JoinGameSessionError('User connection not found'));
 
     session.set(playerUserId, userConnection);
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 
   removePlayerFromSession(gameSessionId: string, playerUserId: string) {
     const session = this.sessions.get(gameSessionId);
-    if (!session) return Fail(new LeaveGameSessionError('The session does not exist'));
+    if (!session) return fail(new LeaveGameSessionError('The session does not exist'));
 
     session.delete(playerUserId);
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 
   broadcastToSession(gameSessionId: string, event: GameSessionEvent) {
     const session = this.sessions.get(gameSessionId);
-    if (!session) return Fail(new BroadcastToGameSessionError('The session does not exist'));
+    if (!session) return fail(new BroadcastToGameSessionError('The session does not exist'));
 
     try {
       const message = JSON.stringify(event);
@@ -53,24 +53,24 @@ export class WebSocketGameSessionService {
         connection.send(message);
       });
 
-      return Ok(undefined);
+      return ok(undefined);
     } catch (_) {
-      return Fail(new BroadcastToGameSessionError('Error parsing event'));
+      return fail(new BroadcastToGameSessionError('Error parsing event'));
     }
   }
 
   sendMessageToPlayer(playerUserId: string, event: GameSessionEvent) {
     const connection = this.connections.get(playerUserId);
-    if (!connection) return Fail(new SendMessageToPlayerError('User connection not found'));
+    if (!connection) return fail(new SendMessageToPlayerError('User connection not found'));
 
     try {
       const message = JSON.stringify(event);
 
       connection.send(message);
 
-      return Ok(undefined);
+      return ok(undefined);
     } catch (_) {
-      return Fail(new SendMessageToPlayerError('Error parsing event'));
+      return fail(new SendMessageToPlayerError('Error parsing event'));
     }
   }
 }

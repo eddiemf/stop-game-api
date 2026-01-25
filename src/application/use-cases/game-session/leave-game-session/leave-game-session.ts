@@ -6,10 +6,9 @@ import {
   type LeaveGameSessionError,
   type PlayerNotInSessionError,
 } from '@app/domain';
-import { PlayerLeftEvent } from '@app/dtos';
-import { GameSessionMapper, PlayerMapper } from '@app/mappers';
-import type { GameSessionService } from '@app/ports/services';
-import { Fail, Ok, type PromiseResult } from '@shared/result';
+import { gameSessionToDTO, playerToDTO } from '@app/mappers';
+import type { GameConnection } from '@app/ports';
+import { fail, ok, type PromiseResult } from '@shared/result';
 
 interface Input {
   sessionId: string;
@@ -19,7 +18,7 @@ interface Input {
 export class LeaveGameSession {
   constructor(
     private gameSessionRepository: GameSessionRepository,
-    private gameSessionService: GameSessionService
+    private gameConnection: GameConnection
   ) {}
 
   async execute({
@@ -36,33 +35,27 @@ export class LeaveGameSession {
     >
   > {
     const gameSessionResult = await this.gameSessionRepository.findById(sessionId);
-    if (!gameSessionResult.isOk) return Fail(gameSessionResult.error);
+    if (!gameSessionResult.isOk) return fail(gameSessionResult.error);
 
     const gameSession = gameSessionResult.data;
-    if (!gameSession) return Fail(new GameSessionNotFoundError('Failed to leave game session'));
+    if (!gameSession) return fail(new GameSessionNotFoundError('Failed to leave game session'));
 
     const disconnectResult = gameSession.disconnectPlayer(userId);
-    if (!disconnectResult.isOk) return Fail(disconnectResult.error);
+    if (!disconnectResult.isOk) return fail(disconnectResult.error);
 
     const saveResult = await this.gameSessionRepository.save(gameSession);
-    if (!saveResult.isOk) return Fail(saveResult.error);
+    if (!saveResult.isOk) return fail(saveResult.error);
 
-    const leaveSessionResult = this.gameSessionService.removePlayerFromSession(
-      gameSession.getId(),
-      userId
-    );
-    if (!leaveSessionResult.isOk) return Fail(leaveSessionResult.error);
+    const leaveSessionResult = this.gameConnection.removePlayerFromSession(gameSession.id, userId);
+    if (!leaveSessionResult.isOk) return fail(leaveSessionResult.error);
 
     const player = disconnectResult.data;
-    const broadcastResult = this.gameSessionService.broadcastToSession(
-      gameSession.getId(),
-      new PlayerLeftEvent({
-        player: PlayerMapper.toDTO(player),
-        gameSession: GameSessionMapper.toDTO(gameSession),
-      })
-    );
-    if (!broadcastResult.isOk) return Fail(broadcastResult.error);
+    const broadcastResult = this.gameConnection.broadcastToSession(gameSession.id, {
+      type: 'PLAYER_LEFT',
+      payload: { player: playerToDTO(player), gameSession: gameSessionToDTO(gameSession) },
+    });
+    if (!broadcastResult.isOk) return fail(broadcastResult.error);
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 }

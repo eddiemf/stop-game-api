@@ -1,138 +1,105 @@
 import {
   BroadcastToGameSessionError,
   DatabaseError,
-  type GameSession,
+  GameSession,
   type GameSessionRepository,
   LeaveGameSessionError,
-  type Player,
-  PlayerNotInSessionError,
+  Player,
 } from '@app/domain';
-import { PlayerLeftEvent } from '@app/dtos/events/player-left-event';
-import { GameSessionMapper, PlayerMapper } from '@app/mappers';
-import type { GameSessionService } from '@app/ports/services';
-import { Fail, Ok } from '@shared/result';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { GameConnection } from '@app/ports';
+import { fail, ok } from '@shared/result';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { LeaveGameSession } from './leave-game-session';
 
-vi.mock('@app/mappers/player-mapper');
-vi.mock('@app/mappers/game-session-mapper');
-vi.mock('@app/dtos/events/player-left-event');
-
 describe('LeaveGameSession', () => {
   const gameSessionRepository = mock<GameSessionRepository>();
-  const gameSessionService = mock<GameSessionService>();
-  const gameSession = mock<GameSession>();
-  const player = mock<Player>();
-  const playerLeftEvent = vi.mocked(PlayerLeftEvent);
-  const playerMapper = vi.mocked(PlayerMapper);
-  const gameSessionMapper = vi.mocked(GameSessionMapper);
+  const gameConnection = mock<GameConnection>();
 
-  const useCase = new LeaveGameSession(gameSessionRepository, gameSessionService);
+  const useCase = new LeaveGameSession(gameSessionRepository, gameConnection);
 
   beforeEach(() => {
-    gameSessionRepository.findById.mockResolvedValue(Ok(gameSession));
-    gameSession.disconnectPlayer.mockReturnValue(Ok(player));
-    gameSessionRepository.save.mockResolvedValue(Ok(undefined));
-    gameSessionService.removePlayerFromSession.mockReturnValue(Ok(undefined));
-    gameSession.getId.mockReturnValue('sessionId');
-    gameSessionService.broadcastToSession.mockReturnValue(Ok(undefined));
-    // @ts-expect-error
-    playerMapper.toDTO.mockReturnValue('playerDTO');
-    // @ts-expect-error
-    gameSessionMapper.toDTO.mockReturnValue('gameSessionDTO');
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
+    const player = Player.create({ userId: 'userId', name: 'Test Player' }).getData();
+    const gameSession = GameSession.create({ name: 'Test Session', players: [player] }).getData();
+    gameSessionRepository.findById.mockResolvedValue(ok(gameSession));
+    gameSessionRepository.save.mockResolvedValue(ok(undefined));
+    gameConnection.removePlayerFromSession.mockReturnValue(ok(undefined));
+    gameConnection.broadcastToSession.mockReturnValue(ok(undefined));
   });
 
   it('returns a DatabaseError if finding the game session fails', async () => {
-    gameSessionRepository.findById.mockResolvedValue(Fail(new DatabaseError('Error')));
+    gameSessionRepository.findById.mockResolvedValue(fail(new DatabaseError('Error')));
 
-    const result = await useCase.execute({ sessionId: 'sessionId', userId: 'userId' });
-    if (result.isOk) throw 'Expected an error';
+    const error = (await useCase.execute({ sessionId: 'sessionId', userId: 'userId' })).getError();
 
     expect(gameSessionRepository.findById).toHaveBeenCalledWith('sessionId');
-    expect(result.error.code).toEqual('DatabaseError');
+    expect(error.code).toEqual('DatabaseError');
   });
 
   it('returns a GameSessionNotFoundError if the game session could not be found', async () => {
-    gameSessionRepository.findById.mockResolvedValue(Ok(null));
+    gameSessionRepository.findById.mockResolvedValue(ok(null));
 
-    const result = await useCase.execute({ sessionId: 'sessionId', userId: 'userId' });
-    if (result.isOk) throw 'Expected an error';
+    const error = (await useCase.execute({ sessionId: 'sessionId', userId: 'userId' })).getError();
 
     expect(gameSessionRepository.findById).toHaveBeenCalledWith('sessionId');
-    expect(result.error.code).toEqual('GameSessionNotFoundError');
+    expect(error.code).toEqual('GameSessionNotFoundError');
   });
 
   it('returns a PlayerNotInSessionError if the player is not in the game session', async () => {
-    gameSession.disconnectPlayer.mockReturnValue(Fail(new PlayerNotInSessionError('Error')));
+    const error = (
+      await useCase.execute({ sessionId: 'sessionId', userId: 'id-not-in-session' })
+    ).getError();
 
-    const result = await useCase.execute({ sessionId: 'sessionId', userId: 'userId' });
-    if (result.isOk) throw 'Expected an error';
-
-    expect(gameSession.disconnectPlayer).toHaveBeenCalledWith('userId');
-    expect(result.error.code).toBe('PlayerNotInSessionError');
+    expect(error.code).toBe('PlayerNotInSessionError');
   });
 
   it('returns a DatabaseError if saving the game session fails', async () => {
-    gameSessionRepository.save.mockResolvedValue(Fail(new DatabaseError('Error')));
+    gameSessionRepository.save.mockResolvedValue(fail(new DatabaseError('Error')));
 
-    const result = await useCase.execute({ sessionId: 'sessionId', userId: 'userId' });
-    if (result.isOk) throw 'Expected an error';
+    const error = (await useCase.execute({ sessionId: 'sessionId', userId: 'userId' })).getError();
 
+    const gameSession = gameSessionRepository.findById.mock.settledResults[0].value.data;
     expect(gameSessionRepository.save).toHaveBeenCalledWith(gameSession);
-    expect(result.error.code).toBe('DatabaseError');
+    expect(error.code).toBe('DatabaseError');
   });
 
   it('returns a LeaveGameSessionError if disconnecting the player fails', async () => {
-    gameSessionService.removePlayerFromSession.mockReturnValue(
-      Fail(new LeaveGameSessionError('Error'))
+    gameConnection.removePlayerFromSession.mockReturnValue(
+      fail(new LeaveGameSessionError('Error'))
     );
 
-    const result = await useCase.execute({ sessionId: 'sessionId', userId: 'userId' });
-    if (result.isOk) throw 'Expected an error';
+    const error = (await useCase.execute({ sessionId: 'sessionId', userId: 'userId' })).getError();
 
-    expect(gameSessionService.removePlayerFromSession).toHaveBeenCalledWith('sessionId', 'userId');
-    expect(result.error.code).toBe('LeaveGameSessionError');
+    const gameSession = gameSessionRepository.findById.mock.settledResults[0].value.data;
+    expect(gameConnection.removePlayerFromSession).toHaveBeenCalledWith(gameSession.id, 'userId');
+    expect(error.code).toBe('LeaveGameSessionError');
   });
 
   it('returns a BroadcastToGameSessionError if broadcasting the game session fails', async () => {
-    gameSessionService.broadcastToSession.mockReturnValue(
-      Fail(new BroadcastToGameSessionError('Error'))
+    gameConnection.broadcastToSession.mockReturnValue(
+      fail(new BroadcastToGameSessionError('Error'))
     );
 
-    const result = await useCase.execute({ sessionId: 'sessionId', userId: 'userId' });
-    if (result.isOk) throw 'Expected an error';
+    const error = (await useCase.execute({ sessionId: 'sessionId', userId: 'userId' })).getError();
 
-    expect(gameSessionService.broadcastToSession).toHaveBeenCalledWith(
-      'sessionId',
-      expect.any(PlayerLeftEvent)
-    );
-    expect(playerLeftEvent).toHaveBeenCalledWith({
-      player: 'playerDTO',
-      gameSession: 'gameSessionDTO',
+    const gameSession = gameSessionRepository.findById.mock.settledResults[0].value.data;
+    expect(gameConnection.broadcastToSession).toHaveBeenCalledWith(gameSession.id, {
+      type: 'PLAYER_LEFT',
+      payload: {
+        player: expect.objectContaining({ userId: 'userId', name: 'Test Player' }),
+        gameSession: expect.objectContaining({ name: 'Test Session' }),
+      },
     });
-    expect(result.error.code).toBe('BroadcastToGameSessionError');
+    expect(error.code).toBe('BroadcastToGameSessionError');
   });
 
   it('returns Ok if the player leaves the game session successfully', async () => {
-    const result = await useCase.execute({ sessionId: 'sessionId', userId: 'userId' });
+    const result = await useCase.execute({
+      sessionId: 'sessionId',
+      userId: 'userId',
+    });
     if (!result.isOk) throw 'Expected success';
 
-    expect(gameSessionRepository.findById).toHaveBeenCalledWith('sessionId');
-    expect(gameSession.disconnectPlayer).toHaveBeenCalledWith('userId');
-    expect(gameSessionRepository.save).toHaveBeenCalledWith(gameSession);
-    expect(gameSessionService.removePlayerFromSession).toHaveBeenCalledWith('sessionId', 'userId');
-    expect(gameSessionService.broadcastToSession).toHaveBeenCalledWith(
-      'sessionId',
-      expect.any(PlayerLeftEvent)
-    );
-    expect(playerLeftEvent).toHaveBeenCalledWith({
-      player: 'playerDTO',
-      gameSession: 'gameSessionDTO',
-    });
+    expect(result.data).toBeUndefined();
   });
 });
