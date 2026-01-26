@@ -11,7 +11,9 @@ export class GameSessionRouter {
 
   private createGameSession() {
     this.app.post('/game-session', async (req, res) => {
-      const result = await this.container.gameChannelController.create({ body: req.body });
+      const result = await this.container.gameChannelController.create({
+        body: req.body,
+      });
 
       if (!result.isOk) return res.status(result.error.status).json(result.error);
 
