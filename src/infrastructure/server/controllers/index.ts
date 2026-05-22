@@ -1,2 +1,2 @@
-export * from './game-channel';
+export * from './game-session';
 // export * from './game-topics';

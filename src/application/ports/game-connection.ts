@@ -22,7 +22,7 @@ export interface GameConnection {
   ): Result<void, BroadcastToGameSessionError>;
 }
 
-type GameSessionEvent =
+export type GameSessionEvent =
   | PlayerJoinedEvent
   | PlayerLeftEvent
   | TopicAddedEvent

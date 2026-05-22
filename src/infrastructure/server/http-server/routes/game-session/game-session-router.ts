@@ -1,10 +1,10 @@
-import type { IocContainer } from '@infrastructure/ioc';
+import type { ModulesRegistry } from '@infrastructure/modules-registry';
 import type { Express } from 'express';
 
 export class GameSessionRouter {
   constructor(
     private app: Express,
-    private container: IocContainer
+    private container: ModulesRegistry
   ) {
     this.createGameSession();
   }

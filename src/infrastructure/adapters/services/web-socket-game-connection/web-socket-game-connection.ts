@@ -4,24 +4,24 @@ import {
   LeaveGameSessionError,
   SendMessageToPlayerError,
 } from '@app/domain';
-import type { GameSessionEvent } from '@app/ports/services';
+import type { GameSessionEvent } from '@app/ports';
 import { fail, ok } from '@shared/result';
 
-export class WebSocketGameSessionService {
+export class WebSocketGameConnection {
   private connections: Map<string, WebSocket> = new Map();
   private sessions: Map<string, Map<string, WebSocket>> = new Map();
 
-  registerConnection(playerUserId: string, connection: WebSocket) {
-    this.connections.set(playerUserId, connection);
-  }
-
-  createSession(gameSessionId: string) {
+  public createSession(gameSessionId: string) {
     this.sessions.set(gameSessionId, new Map());
 
     return ok(undefined);
   }
 
-  addPlayerToSession(gameSessionId: string, playerUserId: string) {
+  public registerConnection(playerUserId: string, connection: WebSocket) {
+    this.connections.set(playerUserId, connection);
+  }
+
+  public addPlayerToSession(gameSessionId: string, playerUserId: string) {
     const session = this.sessions.get(gameSessionId);
     if (!session) return fail(new JoinGameSessionError('The session does not exist'));
 
@@ -33,7 +33,7 @@ export class WebSocketGameSessionService {
     return ok(undefined);
   }
 
-  removePlayerFromSession(gameSessionId: string, playerUserId: string) {
+  public removePlayerFromSession(gameSessionId: string, playerUserId: string) {
     const session = this.sessions.get(gameSessionId);
     if (!session) return fail(new LeaveGameSessionError('The session does not exist'));
 
@@ -42,7 +42,7 @@ export class WebSocketGameSessionService {
     return ok(undefined);
   }
 
-  broadcastToSession(gameSessionId: string, event: GameSessionEvent) {
+  public broadcastToSession(gameSessionId: string, event: GameSessionEvent) {
     const session = this.sessions.get(gameSessionId);
     if (!session) return fail(new BroadcastToGameSessionError('The session does not exist'));
 
@@ -59,7 +59,7 @@ export class WebSocketGameSessionService {
     }
   }
 
-  sendMessageToPlayer(playerUserId: string, event: GameSessionEvent) {
+  public sendMessageToPlayer(playerUserId: string, event: GameSessionEvent) {
     const connection = this.connections.get(playerUserId);
     if (!connection) return fail(new SendMessageToPlayerError('User connection not found'));
 

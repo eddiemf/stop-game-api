@@ -1,37 +1,35 @@
-import type { GameSessionDTO } from '@app/dtos';
 import type { CreateGameSession } from '@app/use-cases';
-import { fail, ok } from '@shared/result';
-import { Controller, type ControllerRequest, type ControllerResponse } from '../controller';
+import type { Request, Response } from 'express';
+import { Controller } from '../controller';
 
-export class GameChannelController extends Controller {
+export class GameSessionController extends Controller {
   constructor(private createGameSession: CreateGameSession) {
     super();
   }
 
-  public async create({ body }: ControllerRequest): ControllerResponse<GameSessionDTO> {
+  public async create(req: Request, res: Response) {
     try {
-      const { name } = body;
+      const { name } = req.body;
 
       if (!name || typeof name !== 'string') {
-        return fail({
-          status: 400,
+        return res.status(400).json({
           error: this.mapValidationError('name', 'Name must be a string.'),
         });
       }
 
-      const gameSessionResult = await this.createGameSession.execute({ name });
+      const result = await this.createGameSession.execute({ name });
 
-      if (!gameSessionResult.isOk) {
-        const error = this.mapErrorFromResult(gameSessionResult);
+      if (!result.isOk) {
+        const { error } = result;
 
-        if (error.code === 'ValidationError') return fail({ status: 400, error });
+        if (error.code === 'ValidationError') return res.status(400).json({ error });
 
-        return fail({ status: 500, error });
+        return res.status(500).json({ error });
       }
 
-      return ok({ status: 200, data: gameSessionResult.data });
+      return res.status(200).json({ data: result.data });
     } catch (_) {
-      return fail({ status: 500, error: this.getInternalServerError() });
+      return res.status(500).json({ error: this.getInternalServerError() });
     }
   }
 

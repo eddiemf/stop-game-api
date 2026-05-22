@@ -4,9 +4,8 @@
   "description": "",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx ./src/index.ts",
+    "dev": "tsx watch ./src/index.ts",
     "check": "biome check --write && tsc --noEmit",
-    "clean": "rm -rf dist",
     "test": "vitest"
   },
   "keywords": [

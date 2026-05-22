@@ -1,8 +1,8 @@
 import type { Server } from 'node:http';
-import type { IocContainer } from '@infrastructure/ioc';
+import type { ModulesRegistry } from '@infrastructure/modules-registry';
 import { WebSocketServer } from 'ws';
 
-export function createWebSocketServer(httpServer: Server, container: IocContainer) {
+export function createWebSocketServer(httpServer: Server, container: ModulesRegistry) {
   const wss = new WebSocketServer({ server: httpServer, clientTracking: true });
 
   wss.on('connection', (ws) => {
